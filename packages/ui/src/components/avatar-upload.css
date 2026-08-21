@@ -1,0 +1,34 @@
+/* ============================ AvatarUpload ============================ */
+.pxui-avatar-upload { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+.pxui-avatar-upload-btn {
+  position: relative; display: inline-flex; padding: 0;
+  border: none; background: transparent; cursor: pointer; border-radius: var(--r-full);
+}
+.pxui-avatar-upload-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-avatar-upload-btn:disabled { cursor: not-allowed; opacity: .6; }
+
+.pxui-avatar-upload-badge {
+  position: absolute; right: -2px; bottom: -2px;
+  display: grid; place-items: center;
+  border-radius: var(--r-full);
+  background: var(--accent); color: var(--accent-fg);
+  border: 2px solid var(--surface);
+  transition: background var(--dur-fast);
+}
+.pxui-avatar-upload-btn:hover .pxui-avatar-upload-badge { background: var(--accent-hover); }
+
+.pxui-avatar-upload-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pxui-avatar-upload-action {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: calc(32px * var(--density)); padding: 0 12px;
+  border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text-2);
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.pxui-avatar-upload-action:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.pxui-avatar-upload-action:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-avatar-upload-action:disabled { opacity: .5; cursor: not-allowed; }
+.pxui-avatar-upload-remove { color: var(--red); border-color: var(--red-border); }
+.pxui-avatar-upload-remove:hover:not(:disabled) { background: var(--red-tint); color: var(--red); }

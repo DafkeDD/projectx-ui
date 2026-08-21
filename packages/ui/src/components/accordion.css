@@ -1,0 +1,41 @@
+/* ============================ Accordion ============================ */
+.pxui-accordion { display: flex; flex-direction: column; min-width: 0; }
+
+.pxui-accordion-bordered {
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  background: var(--surface); overflow: hidden;
+}
+.pxui-accordion-bordered .pxui-accordion-item + .pxui-accordion-item { border-top: 1px solid var(--border); }
+
+.pxui-accordion-separated { gap: 10px; }
+.pxui-accordion-separated .pxui-accordion-item {
+  border: 1px solid var(--border); border-radius: var(--r-md);
+  background: var(--surface); overflow: hidden;
+}
+.pxui-accordion-separated .pxui-accordion-item[data-state="open"] { border-color: var(--border-strong); }
+
+.pxui-accordion-plain .pxui-accordion-item + .pxui-accordion-item { border-top: 1px solid var(--border); }
+
+.pxui-accordion-trigger {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 15px 18px; border: none; background: transparent;
+  font: inherit; font-size: 14.5px; font-weight: 600; color: var(--text);
+  text-align: left; cursor: pointer; transition: background var(--dur-fast);
+}
+.pxui-accordion-trigger:hover { background: var(--surface-2); }
+.pxui-accordion-trigger:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-accordion-icon { display: inline-flex; color: var(--text-3); flex: none; }
+.pxui-accordion-label { flex: 1; min-width: 0; }
+.pxui-accordion-caret { flex: none; color: var(--text-3); transition: transform var(--dur); }
+.pxui-accordion-trigger[data-state="open"] .pxui-accordion-caret { transform: rotate(180deg); }
+.pxui-accordion-item[data-disabled] .pxui-accordion-trigger { opacity: .5; cursor: not-allowed; }
+
+.pxui-accordion-content { overflow: hidden; }
+.pxui-accordion-content[data-state="open"] { animation: pxui-accordion-open var(--dur-slow) var(--ease) both; }
+.pxui-accordion-content-inner {
+  padding: 0 18px 17px; font-size: 13.5px; color: var(--text-2); line-height: 1.6;
+}
+@keyframes pxui-accordion-open {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}

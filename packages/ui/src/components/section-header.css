@@ -1,0 +1,38 @@
+/* ============================ SectionHeader ============================ */
+.pxui-section-header {
+  --pxui-section-color: var(--accent);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; min-width: 0;
+}
+.pxui-section-header-divider {
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+.pxui-section-accent { --pxui-section-color: var(--accent); }
+.pxui-section-green { --pxui-section-color: var(--green); }
+.pxui-section-amber { --pxui-section-color: var(--amber); }
+.pxui-section-red { --pxui-section-color: var(--red); }
+.pxui-section-blue { --pxui-section-color: var(--blue); }
+.pxui-section-violet { --pxui-section-color: var(--violet); }
+.pxui-section-neutral { --pxui-section-color: var(--text-3); }
+
+.pxui-section-bar {
+  flex: none; width: 3px; height: 15px;
+  border-radius: var(--r-full); background: var(--pxui-section-color);
+}
+.pxui-section-icon { display: inline-flex; flex: none; color: var(--pxui-section-color); }
+.pxui-section-icon svg { width: 16px; height: 16px; }
+
+.pxui-section-text { flex: 1; min-width: 0; }
+.pxui-section-title {
+  font-size: 13px; font-weight: 700; letter-spacing: .01em; color: var(--text);
+  display: flex; align-items: baseline; gap: 6px; min-width: 0;
+}
+.pxui-section-count { font-size: 12px; font-weight: 500; color: var(--text-3); }
+.pxui-section-description { font-size: var(--fs-sm); color: var(--text-3); margin-top: 2px; line-height: 1.45; }
+
+.pxui-section-actions { flex: none; display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+.pxui-section-header-sm { margin-bottom: 10px; gap: 8px; }
+.pxui-section-header-sm .pxui-section-bar { height: 12px; width: 2.5px; }
+.pxui-section-header-sm .pxui-section-title { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; }

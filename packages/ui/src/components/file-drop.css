@@ -1,0 +1,54 @@
+/* ============================ FileDrop ============================ */
+.pxui-filedrop {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 48px 24px; text-align: center; cursor: pointer; user-select: none;
+  background: var(--surface); border: 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  transition: border-color var(--dur), background var(--dur), color var(--dur);
+}
+.pxui-filedrop:hover, .pxui-filedrop-dragging { border-color: var(--accent); background: var(--accent-tint); }
+.pxui-filedrop:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--accent); }
+.pxui-filedrop-disabled { opacity: .55; cursor: not-allowed; }
+
+.pxui-filedrop-icon {
+  display: grid; place-items: center; width: 60px; height: 60px;
+  border-radius: var(--r-lg); background: var(--surface-2);
+  border: 1px solid var(--border); color: var(--accent); margin-bottom: 8px;
+  transition: background var(--dur), border-color var(--dur);
+}
+.pxui-filedrop:hover .pxui-filedrop-icon, .pxui-filedrop-dragging .pxui-filedrop-icon {
+  background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: var(--accent);
+}
+.pxui-filedrop-title { font-size: 14.5px; font-weight: 600; color: var(--text); }
+.pxui-filedrop-description { font-size: 13px; color: var(--text-3); }
+
+/* ---------- FileItem ---------- */
+.pxui-fileitem {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 13px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--r-md);
+}
+.pxui-fileitem-icon {
+  display: grid; place-items: center; width: 32px; height: 32px; flex: none;
+  border-radius: var(--r-sm); background: var(--surface-3); color: var(--text-3);
+}
+.pxui-fileitem-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pxui-fileitem-name {
+  font-size: 13.5px; font-weight: 550; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pxui-fileitem-size { font-size: var(--fs-sm); color: var(--text-3); }
+.pxui-fileitem-progress {
+  display: block; height: 4px; margin-top: 4px;
+  background: var(--surface-3); border-radius: var(--r-full); overflow: hidden;
+}
+.pxui-fileitem-progress-bar {
+  display: block; height: 100%; background: var(--accent);
+  border-radius: inherit; transition: width .3s var(--ease-out);
+}
+.pxui-fileitem-remove {
+  flex: none; display: grid; place-items: center; width: 28px; height: 28px;
+  border: none; background: transparent; color: var(--text-3);
+  border-radius: var(--r-xs); cursor: pointer;
+}
+.pxui-fileitem-remove:hover { background: var(--red-tint); color: var(--red); }

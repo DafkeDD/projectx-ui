@@ -1,0 +1,8 @@
+/* ============================ Separator ============================ */
+.pxui-separator { background: var(--border); border: none; flex: none; }
+.pxui-separator-horizontal { height: 1px; width: 100%; }
+.pxui-separator-vertical { width: 1px; align-self: stretch; min-height: 1em; }
+
+.pxui-separator-labelled { display: flex; align-items: center; gap: 12px; width: 100%; }
+.pxui-separator-labelled .pxui-separator-line { flex: 1; height: 1px; background: var(--border); }
+.pxui-separator-label { font-size: var(--fs-sm); color: var(--text-3); font-weight: 550; white-space: nowrap; }

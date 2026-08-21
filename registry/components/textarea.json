@@ -1,0 +1,19 @@
+{
+  "name": "textarea",
+  "title": "Textarea",
+  "description": "Meerregelig tekstveld, optioneel meegroeiend.",
+  "category": "Formulieren",
+  "dependencies": [
+    "field"
+  ],
+  "files": [
+    {
+      "path": "components/textarea.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn } from \"../lib/cn\";\nimport { useFieldProps } from \"./field\";\n\nexport interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {\n  invalid?: boolean;\n  /** Groeit automatisch mee met de inhoud. */\n  autoResize?: boolean;\n}\n\n/** Textarea — meerregelig tekstveld, optioneel meegroeiend. */\nexport const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(\n  { invalid, autoResize, className, onInput, rows = 4, ...props },\n  ref\n) {\n  const inner = React.useRef<HTMLTextAreaElement | null>(null);\n  const merged = useFieldProps(props as Parameters<typeof useFieldProps>[0]) as TextareaProps;\n  const { invalid: isInvalid, ...rest } = { ...merged, invalid: invalid ?? merged.invalid };\n\n  const resize = React.useCallback(() => {\n    const node = inner.current;\n    if (!node || !autoResize) return;\n    node.style.height = \"auto\";\n    node.style.height = `${node.scrollHeight}px`;\n  }, [autoResize]);\n\n  React.useEffect(resize, [resize, rest.value]);\n\n  return (\n    <textarea\n      ref={(node) => {\n        inner.current = node;\n        if (typeof ref === \"function\") ref(node);\n        else if (ref) (ref as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;\n      }}\n      rows={rows}\n      className={cn(\"pxui-textarea\", isInvalid && \"pxui-input-invalid\", className)}\n      aria-invalid={isInvalid || undefined}\n      onInput={(event) => {\n        resize();\n        onInput?.(event);\n      }}\n      {...(rest as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}\n    />\n  );\n});\n"
+    },
+    {
+      "path": "components/textarea.css",
+      "content": "/* ============================ Textarea ============================ */\n.pxui-textarea {\n  width: 100%; padding: calc(11px * var(--density)) 13px; min-height: calc(88px * var(--density));\n  background: var(--surface); color: var(--text);\n  border: 1px solid var(--border-strong); border-radius: var(--r-sm);\n  font-size: var(--fs-base); line-height: 1.55; resize: vertical; outline: none;\n  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);\n}\n.pxui-textarea::placeholder { color: var(--text-3); }\n.pxui-textarea:hover:not(:disabled):not(:focus) { border-color: var(--text-3); }\n.pxui-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }\n.pxui-textarea:disabled { background: var(--surface-3); color: var(--text-2); cursor: not-allowed; }\n"
+    }
+  ]
+}

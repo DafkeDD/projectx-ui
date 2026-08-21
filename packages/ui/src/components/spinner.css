@@ -1,0 +1,4 @@
+/* ============================ Spinner ============================ */
+.pxui-spinner { animation: pxui-spin .8s linear infinite; flex: none; }
+.pxui-spinner-track { stroke: currentColor; opacity: .22; }
+.pxui-spinner-head { stroke: currentColor; }

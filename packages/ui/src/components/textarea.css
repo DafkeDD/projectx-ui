@@ -1,0 +1,12 @@
+/* ============================ Textarea ============================ */
+.pxui-textarea {
+  width: 100%; padding: calc(11px * var(--density)) 13px; min-height: calc(88px * var(--density));
+  background: var(--surface); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+  font-size: var(--fs-base); line-height: 1.55; resize: vertical; outline: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.pxui-textarea::placeholder { color: var(--text-3); }
+.pxui-textarea:hover:not(:disabled):not(:focus) { border-color: var(--text-3); }
+.pxui-textarea:focus { border-color: var(--accent); box-shadow: var(--ring); }
+.pxui-textarea:disabled { background: var(--surface-3); color: var(--text-2); cursor: not-allowed; }

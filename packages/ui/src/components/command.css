@@ -1,0 +1,50 @@
+/* ============================ Command ============================ */
+.pxui-command { display: flex; flex-direction: column; min-height: 0; }
+
+.pxui-command-input-wrap {
+  display: flex; align-items: center; gap: 11px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border); flex: none;
+}
+.pxui-command-input-icon { display: inline-flex; color: var(--text-3); flex: none; }
+.pxui-command-input {
+  flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font: inherit; font-size: var(--fs-md); color: var(--text);
+}
+.pxui-command-input::placeholder { color: var(--text-3); }
+
+.pxui-command-list {
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 6px; max-height: 380px; min-height: 0;
+}
+.pxui-command-empty { padding: 34px 16px; text-align: center; font-size: 13.5px; color: var(--text-3); }
+
+.pxui-command-group + .pxui-command-group { margin-top: 4px; }
+.pxui-command-group-heading {
+  padding: 8px 10px 5px; font-size: 11px; font-weight: 650;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--text-3);
+}
+
+.pxui-command-item {
+  display: flex; align-items: center; gap: 11px; width: 100%;
+  padding: 9px 11px; border: none; background: transparent;
+  border-radius: var(--r-sm); font: inherit; font-size: var(--fs-base);
+  color: var(--text); text-align: left; cursor: pointer;
+}
+.pxui-command-item[data-active] { background: var(--accent-tint); color: var(--accent-active); }
+.pxui-command-item[data-active] .pxui-command-item-icon { color: var(--accent); }
+.pxui-command-item[data-disabled] { opacity: .45; cursor: not-allowed; }
+.pxui-command-item-icon { display: inline-flex; color: var(--text-3); flex: none; }
+.pxui-command-item-icon svg { width: 17px; height: 17px; }
+.pxui-command-item-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pxui-command-item-shortcut { flex: none; font-size: 11.5px; color: var(--text-3); font-family: var(--mono); }
+
+.pxui-command-separator { height: 1px; background: var(--border); margin: 5px 6px; }
+.pxui-command-footer {
+  display: flex; align-items: center; gap: 14px; flex: none;
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  font-size: var(--fs-sm); color: var(--text-3); background: var(--surface-2);
+}
+
+.pxui-command-dialog .pxui-dialog-body,
+.pxui-command-dialog { padding: 0; }
+.pxui-command-dialog { overflow: hidden; }

@@ -1,0 +1,104 @@
+/* ============================ ResourceColumns ============================ */
+.pxui-rescols {
+  display: flex; align-items: stretch; gap: 12px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px; min-width: 0;
+}
+
+.pxui-rescol {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--sh-sm); overflow: hidden;
+}
+.pxui-rescol[data-today] { border-color: var(--accent-border); }
+
+/* ---------- Ingeklapte, lege kolom ---------- */
+.pxui-rescol-collapsed {
+  flex: 0 0 54px; min-width: 54px;
+  background: var(--surface-2); border-style: dashed;
+}
+.pxui-rescol-rail {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 14px 0;
+}
+.pxui-rescol-rail-label {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-size: 12px; font-weight: 600; color: var(--text-3); white-space: nowrap;
+}
+
+/* ---------- Kop ---------- */
+.pxui-rescol-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.pxui-rescol-media { flex: none; display: flex; }
+.pxui-rescol-info { flex: 1; min-width: 0; }
+.pxui-rescol-name {
+  font-size: 13.5px; font-weight: 650; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pxui-rescol-count { font-size: 11.5px; color: var(--text-3); margin-top: 1px; }
+.pxui-rescol-actions { flex: none; display: flex; gap: 4px; }
+
+/* ---------- Lijst ---------- */
+.pxui-rescol-list { overflow-y: auto; overscroll-behavior: contain; padding: 5px; }
+.pxui-rescol-empty {
+  padding: 26px 12px; text-align: center;
+  font-size: 12.5px; color: var(--text-3); font-style: italic;
+}
+
+.pxui-rescol-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: calc(8px * var(--density)) 9px; border-radius: var(--r-sm); min-width: 0;
+  transition: background var(--dur-fast);
+}
+.pxui-rescol-row + .pxui-rescol-row { margin-top: 2px; }
+.pxui-rescol-row-clickable { cursor: pointer; }
+.pxui-rescol-row-clickable:hover { background: var(--surface-hover); }
+.pxui-rescol-row-clickable:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.pxui-rescol-time {
+  flex: none; width: 42px;
+  font-size: 12px; font-weight: 650; color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.pxui-rescol-dot {
+  flex: none; width: 8px; height: 8px; border-radius: var(--r-full);
+  background: var(--text-3);
+}
+.pxui-rescol-title {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  font-size: 13px; font-weight: 550; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pxui-rescol-sub { font-size: 11.5px; font-weight: 400; color: var(--text-3); }
+.pxui-rescol-row-actions { flex: none; display: flex; gap: 3px; opacity: 0; transition: opacity var(--dur-fast); }
+.pxui-rescol-row:hover .pxui-rescol-row-actions,
+.pxui-rescol-row:focus-within .pxui-rescol-row-actions { opacity: 1; }
+
+/* ---------- Geblokkeerd ---------- */
+.pxui-rescol-blocked {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 9px; border-radius: var(--r-sm); margin-top: 2px;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--red-tint) 0,
+    var(--red-tint) 4px,
+    var(--surface) 4px,
+    var(--surface) 9px
+  );
+  border: 1px solid color-mix(in srgb, var(--red) 22%, transparent);
+}
+.pxui-rescol-blocked .pxui-rescol-time { color: var(--red); }
+.pxui-rescol-blocked-label { font-size: 12.5px; font-weight: 600; color: var(--red); }
+
+/* ---------- Statuskleuren, gedeeld met de andere agendaweergaven ---------- */
+.pxui-tone-accent { background: var(--accent); }
+.pxui-tone-green { background: var(--green); }
+.pxui-tone-amber { background: var(--amber); }
+.pxui-tone-red { background: var(--red); }
+.pxui-tone-blue { background: var(--blue); }
+.pxui-tone-violet { background: var(--violet); }
+.pxui-tone-neutral { background: var(--text-3); }

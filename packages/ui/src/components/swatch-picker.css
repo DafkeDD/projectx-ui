@@ -1,0 +1,22 @@
+/* ============================ SwatchPicker ============================ */
+.pxui-swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+
+.pxui-swatch {
+  display: grid; place-items: center; flex: none;
+  border-radius: var(--r-full); border: 2px solid transparent;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 12%, transparent);
+  color: #fff; cursor: pointer; padding: 0;
+  transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+}
+.pxui-swatch:hover { transform: scale(1.08); }
+.pxui-swatch:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-swatch[aria-checked="true"] {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor;
+}
+.pxui-swatch-square { border-radius: var(--r-sm); }
+
+.pxui-swatch-custom {
+  background: var(--surface); border: 1px dashed var(--border-strong); color: var(--text-3);
+  box-shadow: none;
+}
+.pxui-swatch-custom:hover { border-color: var(--accent); color: var(--accent); }

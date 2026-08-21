@@ -1,0 +1,15 @@
+/* ============================ Tooltip ============================ */
+.pxui-tooltip {
+  z-index: var(--z-popover);
+  max-width: 260px; padding: 7px 10px;
+  background: var(--text); color: var(--surface);
+  border-radius: var(--r-xs);
+  font-size: var(--fs-sm); font-weight: 550; line-height: 1.4;
+  box-shadow: var(--sh-md);
+  pointer-events: none;
+  animation: pxui-tooltip-in .13s var(--ease-out) both;
+}
+@keyframes pxui-tooltip-in {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: none; }
+}

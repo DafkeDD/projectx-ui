@@ -1,0 +1,48 @@
+/* ============================ Drawer ============================ */
+.pxui-overlay-plain { display: block; padding: 0; }
+
+.pxui-drawer {
+  position: fixed; background: var(--surface); box-shadow: var(--sh-xl);
+  display: flex; flex-direction: column; overflow: hidden; z-index: 1;
+}
+.pxui-drawer-close { position: absolute; top: 14px; right: 14px; z-index: 1; }
+
+.pxui-drawer-right {
+  top: 0; right: 0; bottom: 0; width: min(420px, 92vw);
+  border-left: 1px solid var(--border);
+  animation: pxui-drawer-right .28s var(--ease) both;
+}
+.pxui-drawer-left {
+  top: 0; left: 0; bottom: 0; width: min(420px, 92vw);
+  border-right: 1px solid var(--border);
+  animation: pxui-drawer-left .28s var(--ease) both;
+}
+.pxui-drawer-top {
+  top: 0; left: 0; right: 0; height: min(380px, 80vh);
+  border-bottom: 1px solid var(--border);
+  animation: pxui-drawer-top .28s var(--ease) both;
+}
+.pxui-drawer-bottom {
+  bottom: 0; left: 0; right: 0; height: min(380px, 80vh);
+  border-top: 1px solid var(--border);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  animation: pxui-drawer-bottom .28s var(--ease) both;
+}
+
+@keyframes pxui-drawer-right { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes pxui-drawer-left { from { transform: translateX(-100%); } to { transform: none; } }
+@keyframes pxui-drawer-top { from { transform: translateY(-100%); } to { transform: none; } }
+@keyframes pxui-drawer-bottom { from { transform: translateY(100%); } to { transform: none; } }
+
+.pxui-drawer-header {
+  padding: 22px 22px 14px; padding-right: 52px;
+  display: flex; flex-direction: column; gap: 5px;
+  border-bottom: 1px solid var(--border);
+}
+.pxui-drawer-title { font-size: var(--fs-xl); font-weight: 650; letter-spacing: -0.02em; color: var(--text); }
+.pxui-drawer-description { font-size: 13.5px; color: var(--text-3); line-height: 1.5; }
+.pxui-drawer-body { padding: 20px 22px; overflow-y: auto; flex: 1; min-height: 0; }
+.pxui-drawer-footer {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 16px 22px; border-top: 1px solid var(--border); flex: none;
+}

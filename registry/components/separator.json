@@ -1,0 +1,17 @@
+{
+  "name": "separator",
+  "title": "Separator",
+  "description": "Scheidingslijn, horizontaal of verticaal, met optioneel label.",
+  "category": "Basis",
+  "dependencies": [],
+  "files": [
+    {
+      "path": "components/separator.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn } from \"../lib/cn\";\n\nexport interface SeparatorProps extends React.HTMLAttributes<HTMLDivElement> {\n  orientation?: \"horizontal\" | \"vertical\";\n  /** Optioneel label in het midden van de lijn. */\n  label?: React.ReactNode;\n}\n\n/** Separator — dunne scheidingslijn, optioneel met label. */\nexport const Separator = React.forwardRef<HTMLDivElement, SeparatorProps>(function Separator(\n  { orientation = \"horizontal\", label, className, ...rest },\n  ref\n) {\n  if (label) {\n    return (\n      <div ref={ref} className={cn(\"pxui-separator-labelled\", className)} {...rest}>\n        <span className=\"pxui-separator-line\" />\n        <span className=\"pxui-separator-label\">{label}</span>\n        <span className=\"pxui-separator-line\" />\n      </div>\n    );\n  }\n\n  return (\n    <div\n      ref={ref}\n      role=\"separator\"\n      aria-orientation={orientation}\n      className={cn(\"pxui-separator\", `pxui-separator-${orientation}`, className)}\n      {...rest}\n    />\n  );\n});\n"
+    },
+    {
+      "path": "components/separator.css",
+      "content": "/* ============================ Separator ============================ */\n.pxui-separator { background: var(--border); border: none; flex: none; }\n.pxui-separator-horizontal { height: 1px; width: 100%; }\n.pxui-separator-vertical { width: 1px; align-self: stretch; min-height: 1em; }\n\n.pxui-separator-labelled { display: flex; align-items: center; gap: 12px; width: 100%; }\n.pxui-separator-labelled .pxui-separator-line { flex: 1; height: 1px; background: var(--border); }\n.pxui-separator-label { font-size: var(--fs-sm); color: var(--text-3); font-weight: 550; white-space: nowrap; }\n"
+    }
+  ]
+}

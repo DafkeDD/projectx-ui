@@ -1,0 +1,193 @@
+/* ============================ WeekSchedule ============================ */
+.pxui-schedule {
+  --pxui-hour-height: 56px;
+  --pxui-gutter: 58px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  overflow: hidden;
+}
+.pxui-schedule-scroll { overflow: auto; -webkit-overflow-scrolling: touch; max-height: 100%; }
+.pxui-schedule-inner { min-width: 680px; }
+
+/* ---------- Kop ---------- */
+.pxui-schedule-head {
+  display: grid;
+  grid-template-columns: var(--pxui-gutter) repeat(var(--pxui-schedule-columns), minmax(0, 1fr));
+  position: sticky; top: 0; z-index: 3;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.pxui-schedule-gutter-head { border-right: 1px solid var(--border); }
+.pxui-schedule-dayhead {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 9px 6px; border-right: 1px solid var(--border);
+}
+.pxui-schedule-dayhead:last-child { border-right: none; }
+.pxui-schedule-dayname {
+  font-size: 11px; font-weight: 650; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--text-3);
+}
+.pxui-schedule-daysub {
+  font-size: 16px; font-weight: 700; letter-spacing: -0.02em; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.pxui-schedule-dayhead[data-today] .pxui-schedule-dayname { color: var(--accent); }
+.pxui-schedule-dayhead[data-today] .pxui-schedule-daysub {
+  color: var(--accent-fg); background: var(--accent);
+  border-radius: var(--r-full); min-width: 26px; text-align: center; padding: 0 6px;
+}
+
+/* ---------- Raster ---------- */
+.pxui-schedule-body {
+  position: relative; display: grid;
+  grid-template-columns: var(--pxui-gutter) repeat(var(--pxui-schedule-columns), minmax(0, 1fr));
+}
+
+.pxui-schedule-gutter {
+  position: relative; border-right: 1px solid var(--border); background: var(--surface);
+}
+.pxui-schedule-hour {
+  position: absolute; right: 8px; transform: translateY(-50%);
+  font-size: 11px; font-weight: 600; color: var(--text-3);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+/* Het eerste en laatste uurlabel blijven binnen het raster staan. */
+.pxui-schedule-hour:first-child { transform: translateY(0); }
+.pxui-schedule-hour:last-child { transform: translateY(-100%); }
+
+.pxui-schedule-column {
+  position: relative; border-right: 1px solid var(--border); min-width: 0;
+}
+.pxui-schedule-column:last-child { border-right: none; }
+
+.pxui-schedule-lines {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--border) 0,
+    var(--border) 1px,
+    transparent 1px,
+    transparent var(--pxui-hour-height)
+  );
+}
+
+.pxui-schedule-hatch {
+  position: absolute; left: 0; right: 0; pointer-events: none;
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--surface-2) 0,
+    var(--surface-2) 5px,
+    var(--surface-3) 5px,
+    var(--surface-3) 10px
+  );
+  opacity: .85;
+}
+.pxui-schedule-hatch-full {
+  top: 0; bottom: 0; display: grid; place-items: center;
+}
+.pxui-schedule-hatch-label {
+  font-size: 11px; font-weight: 650; color: var(--text-3);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-full); padding: 3px 10px;
+  text-transform: uppercase; letter-spacing: .05em;
+}
+
+.pxui-schedule-slots {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: none; background: transparent; cursor: copy; padding: 0;
+}
+.pxui-schedule-slots:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.pxui-schedule-slots:focus-visible { outline: none; box-shadow: inset var(--ring); }
+
+/* ---------- Nu-lijn ---------- */
+.pxui-schedule-now {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: var(--red); z-index: 2; pointer-events: none;
+}
+.pxui-schedule-now-dot {
+  position: absolute; left: -3px; top: -3px;
+  width: 8px; height: 8px; border-radius: var(--r-full); background: var(--red);
+}
+
+/* ---------- Blokken ---------- */
+.pxui-schedule-event {
+  --pxui-event-color: var(--accent);
+  position: absolute; z-index: 1;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 5px 8px; overflow: hidden;
+  border-radius: var(--r-xs);
+  border: 1px solid color-mix(in srgb, var(--pxui-event-color) 35%, transparent);
+  border-left: 3px solid var(--pxui-event-color);
+  background: color-mix(in srgb, var(--pxui-event-color) 13%, var(--surface));
+  color: var(--text);
+  cursor: grab; touch-action: none; user-select: none;
+  transition: box-shadow var(--dur-fast), transform var(--dur-fast);
+}
+.pxui-schedule-event:hover { box-shadow: var(--sh-md); z-index: 2; }
+.pxui-schedule-event:focus-visible { outline: none; box-shadow: var(--ring); z-index: 3; }
+.pxui-schedule-event[data-locked] { cursor: default; }
+.pxui-schedule-event[data-dragging] {
+  cursor: grabbing; z-index: 4; box-shadow: var(--sh-lg);
+  transform: scale(1.015); opacity: .95;
+}
+.pxui-schedule-dragging { cursor: grabbing; }
+.pxui-schedule-dragging .pxui-schedule-slots { pointer-events: none; }
+
+.pxui-schedule-event-time {
+  font-size: 10.5px; font-weight: 650; color: var(--pxui-event-color);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.pxui-schedule-event-title {
+  font-size: 12px; font-weight: 650; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pxui-schedule-event-sub {
+  font-size: 11px; color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.pxui-schedule-event-accent { --pxui-event-color: var(--accent); }
+.pxui-schedule-event-green { --pxui-event-color: var(--green); }
+.pxui-schedule-event-amber { --pxui-event-color: var(--amber); }
+.pxui-schedule-event-red { --pxui-event-color: var(--red); }
+.pxui-schedule-event-blue { --pxui-event-color: var(--blue); }
+.pxui-schedule-event-violet { --pxui-event-color: var(--violet); }
+.pxui-schedule-event-neutral { --pxui-event-color: var(--text-3); }
+
+.pxui-schedule-handle {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 8px;
+  cursor: ns-resize; touch-action: none;
+}
+.pxui-schedule-handle::after {
+  content: ""; position: absolute; left: 50%; bottom: 2px;
+  transform: translateX(-50%);
+  width: 22px; height: 2px; border-radius: var(--r-full);
+  background: color-mix(in srgb, var(--pxui-event-color) 55%, transparent);
+  opacity: 0; transition: opacity var(--dur-fast);
+}
+.pxui-schedule-event:hover .pxui-schedule-handle::after { opacity: 1; }
+
+@media (max-width: 720px) {
+  .pxui-schedule { --pxui-gutter: 46px; }
+  .pxui-schedule-daysub { font-size: 14px; }
+}
+
+/* ---------- Geblokkeerd blok ---------- */
+.pxui-schedule-event-blocked {
+  --pxui-event-color: var(--red);
+  cursor: default;
+  border-color: color-mix(in srgb, var(--red) 30%, transparent);
+  border-left-color: color-mix(in srgb, var(--red) 55%, transparent);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--red-tint) 0,
+    var(--red-tint) 4px,
+    var(--surface) 4px,
+    var(--surface) 9px
+  );
+  color: var(--red);
+}
+.pxui-schedule-event-blocked .pxui-schedule-event-title { color: var(--red); }
+.pxui-schedule-event-blocked:hover { box-shadow: none; }

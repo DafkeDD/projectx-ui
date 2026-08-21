@@ -1,0 +1,15 @@
+/* ============================ Popover ============================ */
+.pxui-popover {
+  z-index: var(--z-popover);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-lg);
+  padding: 14px;
+  overflow-y: auto; overscroll-behavior: contain;
+  animation: pxui-menu-in var(--dur-fast) var(--ease) both;
+  color: var(--text);
+  font-size: var(--fs-base);
+}
+.pxui-popover-flush { padding: 0; }
+.pxui-popover[data-side="top"] { transform-origin: bottom; }

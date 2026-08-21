@@ -1,0 +1,53 @@
+/* ============================ EntityHeader ============================ */
+.pxui-entity {
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px;
+  margin-bottom: 20px; min-width: 0;
+}
+.pxui-entity-divider { padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+
+.pxui-entity-media { flex: none; }
+
+.pxui-entity-identity { min-width: 220px; }
+.pxui-entity-title {
+  font-size: 25px; font-weight: 650; letter-spacing: -0.025em;
+  line-height: 1.15; color: var(--text);
+}
+.pxui-entity-suffix {
+  margin-left: 8px; font-size: var(--fs-base); font-weight: 500; color: var(--text-3);
+  letter-spacing: 0;
+}
+.pxui-entity-meta { margin-top: 5px; font-size: 13px; color: var(--text-3); }
+
+.pxui-entity-tags { display: flex; flex-wrap: wrap; gap: 7px; max-width: 460px; padding-top: 3px; }
+
+.pxui-entity-details { display: flex; flex-direction: column; gap: 6px; }
+.pxui-entity-detail {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--text-2);
+  font: inherit; font-size: 13px; text-align: left; text-decoration: none;
+  cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.pxui-entity-detail:hover { background: var(--surface-hover); border-color: var(--border-strong); }
+.pxui-entity-detail:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-entity-detail-static { cursor: default; }
+.pxui-entity-detail-static:hover { background: var(--surface); border-color: var(--border); }
+.pxui-entity-detail-icon { display: inline-flex; color: var(--text-3); }
+.pxui-entity-detail-icon svg { width: 15px; height: 15px; }
+
+.pxui-entity-actions {
+  margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+}
+
+/* ---------- Klein formaat ---------- */
+.pxui-entity-sm { gap: 14px; margin-bottom: 16px; }
+.pxui-entity-sm .pxui-entity-title { font-size: 19px; }
+.pxui-entity-sm .pxui-entity-identity { min-width: 160px; }
+.pxui-entity-sm .pxui-entity-divider { padding-bottom: 14px; }
+
+@media (max-width: 720px) {
+  .pxui-entity { gap: 14px; }
+  .pxui-entity-actions { margin-left: 0; width: 100%; }
+  .pxui-entity-actions > * { flex: 1; justify-content: center; }
+  .pxui-entity-details { flex-direction: row; flex-wrap: wrap; }
+}

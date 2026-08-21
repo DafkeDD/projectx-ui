@@ -1,0 +1,54 @@
+/* ============================ Slider ============================ */
+.pxui-slider { --pxui-slider-color: var(--accent); display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.pxui-slider-green { --pxui-slider-color: var(--green); }
+.pxui-slider-amber { --pxui-slider-color: var(--amber); }
+.pxui-slider-red { --pxui-slider-color: var(--red); }
+
+.pxui-slider-value {
+  align-self: flex-end; font-size: var(--fs-sm); font-weight: 650;
+  color: var(--text); font-family: var(--mono);
+}
+
+.pxui-slider-input {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 20px; background: transparent; cursor: pointer; margin: 0;
+}
+.pxui-slider-input:focus { outline: none; }
+
+.pxui-slider-input::-webkit-slider-runnable-track {
+  height: 6px; border-radius: var(--r-full);
+  background: linear-gradient(
+    to right,
+    var(--pxui-slider-color) 0 var(--pxui-slider-fill),
+    var(--surface-3) var(--pxui-slider-fill) 100%
+  );
+  border: 1px solid var(--border);
+}
+.pxui-slider-input::-moz-range-track {
+  height: 6px; border-radius: var(--r-full);
+  background: linear-gradient(
+    to right,
+    var(--pxui-slider-color) 0 var(--pxui-slider-fill),
+    var(--surface-3) var(--pxui-slider-fill) 100%
+  );
+  border: 1px solid var(--border);
+}
+
+.pxui-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; margin-top: -7px;
+  border-radius: var(--r-full); background: var(--surface);
+  border: 2px solid var(--pxui-slider-color); box-shadow: var(--sh-sm);
+  transition: box-shadow var(--dur-fast), transform var(--dur-fast);
+}
+.pxui-slider-input::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: var(--r-full);
+  background: var(--surface); border: 2px solid var(--pxui-slider-color);
+  box-shadow: var(--sh-sm);
+}
+.pxui-slider-input:hover::-webkit-slider-thumb { transform: scale(1.08); }
+.pxui-slider-input:focus-visible::-webkit-slider-thumb { box-shadow: var(--ring); }
+.pxui-slider-input:focus-visible::-moz-range-thumb { box-shadow: var(--ring); }
+
+.pxui-slider-disabled { opacity: .55; }
+.pxui-slider-disabled .pxui-slider-input { cursor: not-allowed; }

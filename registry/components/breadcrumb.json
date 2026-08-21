@@ -1,0 +1,17 @@
+{
+  "name": "breadcrumb",
+  "title": "Breadcrumb",
+  "description": "Kruimelpad met scheidingstekens.",
+  "category": "Navigatie",
+  "dependencies": [],
+  "files": [
+    {
+      "path": "components/breadcrumb.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn } from \"../lib/cn\";\nimport { Slot } from \"../lib/slot\";\nimport { Icon } from \"../icons/icon\";\n\nexport interface BreadcrumbProps extends React.HTMLAttributes<HTMLElement> {\n  separator?: React.ReactNode;\n}\n\n/** Breadcrumb — kruimelpad met scheidingstekens. */\nexport const Breadcrumb = React.forwardRef<HTMLElement, BreadcrumbProps>(function Breadcrumb(\n  { separator, className, children, ...rest },\n  ref\n) {\n  const items = React.Children.toArray(children).filter(Boolean);\n\n  return (\n    <nav ref={ref} aria-label=\"Kruimelpad\" className={cn(\"pxui-breadcrumb\", className)} {...rest}>\n      <ol className=\"pxui-breadcrumb-list\">\n        {items.map((item, index) => (\n          <li className=\"pxui-breadcrumb-entry\" key={index}>\n            {item}\n            {index < items.length - 1 && (\n              <span className=\"pxui-breadcrumb-separator\" aria-hidden=\"true\">\n                {separator ?? <Icon name=\"chevronRight\" size={14} />}\n              </span>\n            )}\n          </li>\n        ))}\n      </ol>\n    </nav>\n  );\n});\n\nexport interface BreadcrumbItemProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {\n  /** Laatste item: geen link, sterker gekleurd. */\n  current?: boolean;\n  asChild?: boolean;\n  icon?: React.ReactNode;\n}\n\nexport const BreadcrumbItem = React.forwardRef<HTMLAnchorElement, BreadcrumbItemProps>(\n  function BreadcrumbItem({ current, asChild, icon, className, children, ...rest }, ref) {\n    if (current) {\n      return (\n        <span className={cn(\"pxui-breadcrumb-item\", \"pxui-breadcrumb-current\", className)} aria-current=\"page\">\n          {icon}\n          {children}\n        </span>\n      );\n    }\n    const Comp = (asChild ? Slot : \"a\") as React.ElementType;\n    return (\n      <Comp ref={ref} className={cn(\"pxui-breadcrumb-item\", className)} {...rest}>\n        {icon}\n        {children}\n      </Comp>\n    );\n  }\n);\n"
+    },
+    {
+      "path": "components/breadcrumb.css",
+      "content": "/* ============================ Breadcrumb ============================ */\n.pxui-breadcrumb { min-width: 0; }\n.pxui-breadcrumb-list {\n  display: flex; align-items: center; flex-wrap: wrap; gap: 0;\n  list-style: none; margin: 0; padding: 0;\n}\n.pxui-breadcrumb-entry { display: inline-flex; align-items: center; }\n.pxui-breadcrumb-item {\n  display: inline-flex; align-items: center; gap: 6px;\n  font-size: 13px; color: var(--text-3); text-decoration: none;\n  transition: color var(--dur-fast); border-radius: var(--r-xs);\n}\n.pxui-breadcrumb-item svg { width: 14px; height: 14px; }\na.pxui-breadcrumb-item:hover { color: var(--text); }\n.pxui-breadcrumb-item:focus-visible { outline: none; box-shadow: var(--ring); }\n.pxui-breadcrumb-current { color: var(--text); font-weight: 600; }\n.pxui-breadcrumb-separator { display: inline-flex; color: var(--text-3); margin: 0 7px; opacity: .7; }\n"
+    }
+  ]
+}

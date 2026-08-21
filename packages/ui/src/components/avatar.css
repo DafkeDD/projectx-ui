@@ -1,0 +1,25 @@
+/* ============================ Avatar ============================ */
+.pxui-avatar {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: var(--r-full); background: var(--accent); color: var(--accent-fg);
+  font-weight: 650; letter-spacing: -0.01em; flex: none; overflow: visible;
+  user-select: none;
+}
+.pxui-avatar-square { border-radius: var(--r-sm); }
+.pxui-avatar-img {
+  width: 100%; height: 100%; object-fit: cover;
+  border-radius: inherit; display: block;
+}
+.pxui-avatar-status {
+  position: absolute; right: 0; bottom: 0;
+  border-radius: var(--r-full); border: 2px solid var(--surface);
+}
+.pxui-avatar-status-online { background: var(--green); }
+.pxui-avatar-status-busy { background: var(--amber); }
+.pxui-avatar-status-offline { background: var(--text-3); }
+
+.pxui-avatar-group { display: inline-flex; align-items: center; }
+.pxui-avatar-group > .pxui-avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--surface); }
+.pxui-avatar-group > .pxui-avatar:first-child { margin-left: 0; }
+.pxui-avatar-more { background: var(--surface-3); color: var(--text-2); }

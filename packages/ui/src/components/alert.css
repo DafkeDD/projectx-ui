@@ -1,0 +1,28 @@
+/* ============================ Alert ============================ */
+.pxui-alert {
+  --pxui-alert-color: var(--text-2);
+  --pxui-alert-bg: var(--surface-2);
+  --pxui-alert-border: var(--border);
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 15px;
+  background: var(--pxui-alert-bg);
+  border: 1px solid var(--pxui-alert-border);
+  border-radius: var(--r-md);
+}
+.pxui-alert-accent { --pxui-alert-color: var(--accent); --pxui-alert-bg: var(--accent-tint); --pxui-alert-border: var(--accent-border); }
+.pxui-alert-green { --pxui-alert-color: var(--green); --pxui-alert-bg: var(--green-tint); --pxui-alert-border: var(--green-border); }
+.pxui-alert-amber { --pxui-alert-color: var(--amber); --pxui-alert-bg: var(--amber-tint); --pxui-alert-border: var(--amber-border); }
+.pxui-alert-red { --pxui-alert-color: var(--red); --pxui-alert-bg: var(--red-tint); --pxui-alert-border: var(--red-border); }
+.pxui-alert-blue { --pxui-alert-color: var(--blue); --pxui-alert-bg: var(--blue-tint); --pxui-alert-border: var(--blue-border); }
+
+.pxui-alert-icon { display: inline-flex; flex: none; color: var(--pxui-alert-color); margin-top: 1px; }
+.pxui-alert-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pxui-alert-title { font-size: 13.5px; font-weight: 650; color: var(--text); line-height: 1.35; }
+.pxui-alert-text { font-size: 13.5px; color: var(--text-2); line-height: 1.55; }
+.pxui-alert-action { display: flex; gap: 9px; margin-top: 6px; }
+.pxui-alert-close {
+  flex: none; display: grid; place-items: center; width: 24px; height: 24px;
+  border: none; background: transparent; color: var(--text-3);
+  border-radius: var(--r-xs); cursor: pointer;
+}
+.pxui-alert-close:hover { background: color-mix(in srgb, var(--text-3) 14%, transparent); color: var(--text); }

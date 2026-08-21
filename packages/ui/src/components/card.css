@@ -1,0 +1,33 @@
+/* ============================ Card ============================ */
+.pxui-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-sm);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.pxui-card-interactive {
+  cursor: pointer;
+  transition: border-color var(--dur), box-shadow var(--dur), transform var(--dur);
+}
+.pxui-card-interactive:hover {
+  border-color: var(--border-strong); box-shadow: var(--sh-md); transform: translateY(-2px);
+}
+.pxui-card-interactive:focus-visible { outline: none; box-shadow: var(--ring); }
+
+.pxui-card-header {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 20px 22px 0;
+}
+.pxui-card-header > :first-child { flex: 1; min-width: 0; }
+.pxui-card-title { font-size: var(--fs-lg); font-weight: 650; letter-spacing: -0.02em; color: var(--text); }
+.pxui-card-description { font-size: 13.5px; color: var(--text-3); margin-top: 4px; line-height: 1.5; }
+.pxui-card-action { flex: none; display: flex; align-items: center; gap: 8px; }
+.pxui-card-content { padding: calc(18px * var(--density)) 22px; flex: 1; min-width: 0; }
+.pxui-card-header + .pxui-card-content { padding-top: 16px; }
+.pxui-card-footer {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 22px 20px; margin-top: auto;
+}
+.pxui-card-flush .pxui-card-content { padding: 0; }

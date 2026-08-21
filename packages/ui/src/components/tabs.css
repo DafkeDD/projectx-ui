@@ -1,0 +1,54 @@
+/* ============================ Tabs ============================ */
+.pxui-tabs { display: flex; flex-direction: column; min-width: 0; }
+
+.pxui-tabs-list { display: flex; gap: 4px; min-width: 0; }
+.pxui-tabs-list-line { border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
+.pxui-tabs-list-pill {
+  background: var(--surface-3); border-radius: var(--r-sm);
+  padding: 3px; gap: 2px; align-self: flex-start; margin-bottom: 18px;
+}
+.pxui-tabs-list-solid {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 4px; gap: 3px;
+  align-self: flex-start; margin-bottom: 18px; box-shadow: var(--sh-xs);
+}
+
+.pxui-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: none; background: transparent; cursor: pointer;
+  font: inherit; font-size: var(--fs-base); font-weight: 600;
+  color: var(--text-3); white-space: nowrap;
+  transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast);
+}
+.pxui-tab:focus-visible { outline: none; box-shadow: var(--ring); border-radius: var(--r-xs); }
+.pxui-tab:disabled { opacity: .45; cursor: not-allowed; }
+.pxui-tab-icon { display: inline-flex; }
+.pxui-tab-icon svg { width: 16px; height: 16px; }
+.pxui-tab-badge {
+  display: inline-grid; place-items: center; min-width: 19px; height: 19px;
+  padding: 0 6px; border-radius: var(--r-full);
+  background: var(--surface-3); color: var(--text-2);
+  font-size: 11px; font-weight: 700;
+}
+
+.pxui-tabs-list-line .pxui-tab {
+  padding: calc(10px * var(--density)) 14px; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.pxui-tabs-list-line .pxui-tab:hover:not(:disabled) { color: var(--text); }
+.pxui-tabs-list-line .pxui-tab[data-state="active"] { color: var(--accent-active); border-bottom-color: var(--accent); }
+.pxui-tabs-list-line .pxui-tab[data-state="active"] .pxui-tab-badge { background: var(--accent-tint-2); color: var(--accent-active); }
+
+.pxui-tabs-list-pill .pxui-tab,
+.pxui-tabs-list-solid .pxui-tab {
+  height: calc(32px * var(--density)); padding: 0 13px; border-radius: var(--r-xs); font-size: 13px;
+}
+.pxui-tabs-list-pill .pxui-tab:hover:not(:disabled),
+.pxui-tabs-list-solid .pxui-tab:hover:not(:disabled) { color: var(--text); }
+.pxui-tabs-list-pill .pxui-tab[data-state="active"] {
+  background: var(--surface); color: var(--text); box-shadow: var(--sh-xs);
+}
+.pxui-tabs-list-solid .pxui-tab[data-state="active"] {
+  background: var(--accent-tint); color: var(--accent-active);
+}
+
+.pxui-tabs-content:focus-visible { outline: none; }

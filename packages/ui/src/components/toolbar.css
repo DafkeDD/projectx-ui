@@ -1,0 +1,35 @@
+/* ============================ Toolbar ============================ */
+.pxui-toolbar {
+  display: flex; align-items: center; gap: 3px;
+  padding: 4px; border-radius: var(--r-sm); min-width: 0;
+}
+.pxui-toolbar-bordered {
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.pxui-toolbar-vertical { flex-direction: column; align-items: stretch; width: max-content; }
+
+.pxui-toolbar-group { display: flex; align-items: center; gap: 2px; }
+.pxui-toolbar-vertical .pxui-toolbar-group { flex-direction: column; }
+
+.pxui-toolbar-separator {
+  width: 1px; align-self: stretch; margin: 3px 5px; background: var(--border); flex: none;
+}
+.pxui-toolbar-vertical .pxui-toolbar-separator { width: auto; height: 1px; margin: 5px 3px; }
+.pxui-toolbar-spacer { flex: 1; }
+
+.pxui-toolbar-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-width: calc(30px * var(--density)); height: calc(30px * var(--density)); padding: 0 8px;
+  border: none; background: transparent; border-radius: var(--r-xs);
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--text-2);
+  cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast);
+}
+.pxui-toolbar-btn svg { width: 16px; height: 16px; }
+.pxui-toolbar-btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+.pxui-toolbar-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+.pxui-toolbar-btn:disabled { opacity: .45; cursor: not-allowed; }
+.pxui-toolbar-btn[data-active] { background: var(--accent-tint); color: var(--accent-active); }
+
+.pxui-toolbar-sm { padding: 3px; }
+.pxui-toolbar-sm .pxui-toolbar-btn { min-width: 26px; height: 26px; padding: 0 6px; font-size: 12px; }
+.pxui-toolbar-sm .pxui-toolbar-btn svg { width: 14px; height: 14px; }

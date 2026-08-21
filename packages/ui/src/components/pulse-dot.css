@@ -1,0 +1,26 @@
+/* ============================ PulseDot ============================ */
+.pxui-pulse {
+  --pxui-pulse-color: var(--green);
+  position: relative; display: inline-block; flex: none;
+  border-radius: var(--r-full); background: var(--pxui-pulse-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pxui-pulse-color) 18%, transparent);
+}
+.pxui-pulse::after {
+  content: ""; position: absolute; inset: 0;
+  border-radius: inherit; background: var(--pxui-pulse-color);
+  animation: pxui-pulse 1.8s var(--ease-out) infinite;
+}
+.pxui-pulse-still::after { animation: none; display: none; }
+
+@keyframes pxui-pulse {
+  0% { opacity: .55; transform: scale(1); }
+  70% { opacity: 0; transform: scale(2.4); }
+  100% { opacity: 0; transform: scale(2.4); }
+}
+
+.pxui-pulse-green { --pxui-pulse-color: var(--green); }
+.pxui-pulse-amber { --pxui-pulse-color: var(--amber); }
+.pxui-pulse-red { --pxui-pulse-color: var(--red); }
+.pxui-pulse-accent { --pxui-pulse-color: var(--accent); }
+.pxui-pulse-blue { --pxui-pulse-color: var(--blue); }
+.pxui-pulse-neutral { --pxui-pulse-color: var(--text-3); }

@@ -1,0 +1,14 @@
+{
+  "name": "projectx-ui-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "dev": "npm run dev -w @projectx/docs",
+    "build": "npm run registry && npm run build -w @projectx/docs",
+    "build:docs": "npm run build -w @projectx/docs",
+    "registry": "node scripts/build-registry.mjs",
+    "typecheck": "tsc -p packages/ui/tsconfig.json --noEmit"
+  },
+  "engines": { "node": ">=20" }
+}

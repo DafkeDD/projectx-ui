@@ -1,0 +1,145 @@
+"use client";
+import * as React from "react";
+import { cn } from "../lib/cn";
+import { Icon } from "../icons/icon";
+
+export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
+  /** Compactere rijen. */
+  dense?: boolean;
+  /** Wikkel de tabel in een kaart met rand en schaduw. */
+  wrapped?: boolean;
+  /** Minimale breedte voordat er horizontaal gescrold wordt. */
+  minWidth?: number;
+}
+
+/** Table — datatabel met sticky-vriendelijke kop en scrollcontainer. */
+export const Table = React.forwardRef<HTMLTableElement, TableProps>(function Table(
+  { dense, wrapped = true, minWidth = 560, className, children, ...rest },
+  ref
+) {
+  const table = (
+    <table
+      ref={ref}
+      className={cn("pxui-table", dense && "pxui-table-dense", className)}
+      style={{ minWidth }}
+      {...rest}
+    >
+      {children}
+    </table>
+  );
+
+  if (!wrapped) return <div className="pxui-table-scroll">{table}</div>;
+  return (
+    <div className="pxui-table-wrap">
+      <div className="pxui-table-scroll">{table}</div>
+    </div>
+  );
+});
+
+export const TableHeader = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(function TableHeader({ className, ...rest }, ref) {
+  return <thead ref={ref} className={cn("pxui-table-header", className)} {...rest} />;
+});
+
+export const TableBody = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(function TableBody({ className, ...rest }, ref) {
+  return <tbody ref={ref} className={cn("pxui-table-body", className)} {...rest} />;
+});
+
+export const TableFooter = React.forwardRef<
+  HTMLTableSectionElement,
+  React.HTMLAttributes<HTMLTableSectionElement>
+>(function TableFooter({ className, ...rest }, ref) {
+  return <tfoot ref={ref} className={cn("pxui-table-footer", className)} {...rest} />;
+});
+
+export interface TableRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  /** Rij reageert op klikken. */
+  clickable?: boolean;
+  selected?: boolean;
+}
+
+export const TableRow = React.forwardRef<HTMLTableRowElement, TableRowProps>(function TableRow(
+  { clickable, selected, className, ...rest },
+  ref
+) {
+  return (
+    <tr
+      ref={ref}
+      data-selected={selected ? "" : undefined}
+      className={cn("pxui-table-row", clickable && "pxui-table-row-clickable", className)}
+      {...rest}
+    />
+  );
+});
+
+export interface TableHeadProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+  /** Maakt de kolomkop klikbaar om te sorteren. */
+  sortable?: boolean;
+  sorted?: "asc" | "desc" | false;
+  align?: "left" | "center" | "right";
+}
+
+export const TableHead = React.forwardRef<HTMLTableCellElement, TableHeadProps>(function TableHead(
+  { sortable, sorted, align = "left", className, children, onClick, ...rest },
+  ref
+) {
+  return (
+    <th
+      ref={ref}
+      scope="col"
+      aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
+      className={cn("pxui-table-head", `pxui-align-${align}`, sortable && "pxui-table-head-sortable", className)}
+      onClick={sortable ? onClick : undefined}
+      {...rest}
+    >
+      <span className="pxui-table-head-inner">
+        {children}
+        {sortable && (
+          <Icon
+            name={sorted === "asc" ? "chevronUp" : sorted === "desc" ? "chevronDown" : "chevronsUpDown"}
+            size={13}
+            className={cn("pxui-table-sort", sorted && "pxui-table-sort-active")}
+          />
+        )}
+      </span>
+    </th>
+  );
+});
+
+export interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
+  align?: "left" | "center" | "right";
+  /** Nadrukkelijke tekstkleur (voor de eerste kolom). */
+  strong?: boolean;
+}
+
+export const TableCell = React.forwardRef<HTMLTableCellElement, TableCellProps>(function TableCell(
+  { align = "left", strong, className, ...rest },
+  ref
+) {
+  return (
+    <td
+      ref={ref}
+      className={cn("pxui-table-cell", `pxui-align-${align}`, strong && "pxui-table-cell-strong", className)}
+      {...rest}
+    />
+  );
+});
+
+export const TableCaption = React.forwardRef<
+  HTMLTableCaptionElement,
+  React.HTMLAttributes<HTMLTableCaptionElement>
+>(function TableCaption({ className, ...rest }, ref) {
+  return <caption ref={ref} className={cn("pxui-table-caption", className)} {...rest} />;
+});
+
+/** Toolbar boven een tabel (zoekveld, filters, knoppen). */
+export const TableToolbar = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  function TableToolbar({ className, ...rest }, ref) {
+    return <div ref={ref} className={cn("pxui-table-toolbar", className)} {...rest} />;
+  }
+);

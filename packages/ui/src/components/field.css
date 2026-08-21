@@ -1,0 +1,14 @@
+/* ============================ Field ============================ */
+.pxui-field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.pxui-field-labelrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pxui-field-labelaction { font-size: var(--fs-sm); color: var(--text-3); }
+.pxui-field-control { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pxui-field-hint { font-size: var(--fs-sm); color: var(--text-3); line-height: 1.45; }
+.pxui-field-error { font-size: var(--fs-sm); color: var(--red); line-height: 1.45; font-weight: 550; }
+.pxui-field-disabled { opacity: .6; }
+
+.pxui-field-horizontal {
+  flex-direction: row; align-items: flex-start; gap: 20px;
+}
+.pxui-field-horizontal .pxui-field-labelrow { width: 200px; flex: none; padding-top: 11px; }
+.pxui-field-horizontal .pxui-field-control { flex: 1; }

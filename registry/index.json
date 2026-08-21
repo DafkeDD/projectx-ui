@@ -1,0 +1,843 @@
+{
+  "name": "projectx-ui",
+  "version": "0.1.0",
+  "style": "projectx",
+  "shared": [
+    {
+      "path": "lib/cn.ts",
+      "content": "/**\n * cn — eigen mini-implementatie van het \"classnames\"-patroon.\n * Geen clsx, geen tailwind-merge: nul dependencies.\n *\n *   cn(\"pxui-btn\", isPrimary && \"pxui-btn-primary\", { \"is-open\": open })\n */\nexport type ClassValue =\n  | string\n  | number\n  | bigint\n  | null\n  | undefined\n  | false\n  | ClassValue[]\n  | { [key: string]: unknown };\n\nexport function cn(...inputs: ClassValue[]): string {\n  const out: string[] = [];\n\n  const walk = (value: ClassValue): void => {\n    if (!value) return;\n    if (typeof value === \"string\" || typeof value === \"number\") {\n      out.push(String(value));\n      return;\n    }\n    if (Array.isArray(value)) {\n      for (const item of value) walk(item);\n      return;\n    }\n    if (typeof value === \"object\") {\n      for (const key in value) {\n        if ((value as Record<string, unknown>)[key]) out.push(key);\n      }\n    }\n  };\n\n  for (const input of inputs) walk(input);\n\n  // Dedupe met behoud van volgorde.\n  return Array.from(new Set(out.join(\" \").split(/\\s+/).filter(Boolean))).join(\" \");\n}\n"
+    },
+    {
+      "path": "lib/variants.ts",
+      "content": "/**\n * variants — eigen mini-implementatie van het \"class variance\"-patroon.\n * Geen cva. Bouwt een klassenreeks op basis van props.\n *\n *   const button = variants({\n *     base: \"pxui-btn\",\n *     variants: {\n *       variant: { primary: \"pxui-btn-primary\", ghost: \"pxui-btn-ghost\" },\n *       size:    { sm: \"pxui-btn-sm\", md: \"\", lg: \"pxui-btn-lg\" },\n *     },\n *     defaultVariants: { variant: \"primary\", size: \"md\" },\n *   });\n *\n *   button({ variant: \"ghost\" })  // -> \"pxui-btn pxui-btn-ghost\"\n */\nimport { cn, type ClassValue } from \"./cn\";\n\ntype VariantShape = Record<string, Record<string, ClassValue>>;\n\ntype VariantProps<V extends VariantShape> = {\n  /** Naam van de variant, of een boolean voor true/false-varianten. */\n  [K in keyof V]?: keyof V[K] | boolean | null | undefined;\n};\n\nexport interface VariantConfig<V extends VariantShape> {\n  base?: ClassValue;\n  variants?: V;\n  defaultVariants?: VariantProps<V>;\n  compoundVariants?: Array<VariantProps<V> & { class: ClassValue }>;\n}\n\nexport type VariantsFn<V extends VariantShape> = (\n  props?: VariantProps<V> & { className?: ClassValue }\n) => string;\n\nexport function variants<V extends VariantShape>(config: VariantConfig<V>): VariantsFn<V> {\n  const { base, variants: map = {} as V, defaultVariants = {}, compoundVariants = [] } = config;\n\n  return (props = {}) => {\n    const { className, ...rest } = props as Record<string, unknown>;\n    const resolved: Record<string, unknown> = { ...defaultVariants, ...stripUndefined(rest) };\n    const classes: ClassValue[] = [base];\n\n    for (const key in map) {\n      const value = resolved[key];\n      if (value == null) continue;\n      const group = map[key];\n      const picked = group[String(value)];\n      if (picked) classes.push(picked);\n    }\n\n    for (const compound of compoundVariants) {\n      const { class: extra, ...conditions } = compound as Record<string, unknown> & { class: ClassValue };\n      const matches = Object.keys(conditions).every(\n        (key) => String(resolved[key]) === String((conditions as Record<string, unknown>)[key])\n      );\n      if (matches) classes.push(extra);\n    }\n\n    classes.push(className as ClassValue);\n    return cn(...classes);\n  };\n}\n\nfunction stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {\n  const out: Record<string, unknown> = {};\n  for (const key in obj) if (obj[key] !== undefined) out[key] = obj[key];\n  return out;\n}\n\nexport type { VariantProps };\n"
+    },
+    {
+      "path": "lib/slot.tsx",
+      "content": "\"use client\";\n/**\n * Slot — eigen implementatie van het `asChild`-patroon (zoals Radix Slot,\n * maar volledig zelf geschreven). Rendert het enige child-element en\n * voegt de props van de wrapper samen met die van het child.\n */\nimport * as React from \"react\";\nimport { cn } from \"./cn\";\n\nexport interface SlotProps extends React.HTMLAttributes<HTMLElement> {\n  children?: React.ReactNode;\n}\n\nexport const Slot = React.forwardRef<HTMLElement, SlotProps>(function Slot(\n  { children, ...slotProps },\n  ref\n) {\n  if (!React.isValidElement(children)) return null;\n  const child = children as React.ReactElement<Record<string, unknown>>;\n\n  return React.cloneElement(child, {\n    ...mergeProps(slotProps as Record<string, unknown>, child.props),\n    ref: composeRefs(ref, (child as unknown as { ref?: React.Ref<HTMLElement> }).ref),\n  } as Record<string, unknown>);\n});\n\nfunction mergeProps(\n  slotProps: Record<string, unknown>,\n  childProps: Record<string, unknown>\n): Record<string, unknown> {\n  const merged: Record<string, unknown> = { ...slotProps, ...childProps };\n\n  for (const key in slotProps) {\n    const slotValue = slotProps[key];\n    const childValue = childProps[key];\n\n    if (/^on[A-Z]/.test(key) && typeof slotValue === \"function\" && typeof childValue === \"function\") {\n      merged[key] = (...args: unknown[]) => {\n        (childValue as (...a: unknown[]) => void)(...args);\n        (slotValue as (...a: unknown[]) => void)(...args);\n      };\n    } else if (key === \"style\") {\n      merged[key] = { ...(slotValue as object), ...(childValue as object) };\n    } else if (key === \"className\") {\n      merged[key] = cn(slotValue as string, childValue as string);\n    }\n  }\n\n  return merged;\n}\n\nexport function composeRefs<T>(...refs: Array<React.Ref<T> | undefined>) {\n  return (node: T) => {\n    for (const ref of refs) {\n      if (typeof ref === \"function\") ref(node);\n      else if (ref && typeof ref === \"object\") (ref as React.MutableRefObject<T>).current = node;\n    }\n  };\n}\n"
+    },
+    {
+      "path": "lib/hooks.ts",
+      "content": "\"use client\";\nimport * as React from \"react\";\n\n/** useLayoutEffect dat niet klaagt tijdens server-rendering. */\nexport const useIsoLayoutEffect =\n  typeof window !== \"undefined\" ? React.useLayoutEffect : React.useEffect;\n\n/** Stabiele client-check (voorkomt hydration-mismatch bij portals). */\nexport function useMounted(): boolean {\n  const [mounted, setMounted] = React.useState(false);\n  React.useEffect(() => setMounted(true), []);\n  return mounted;\n}\n\n/**\n * Werkt zowel controlled (`value` + `onChange`) als uncontrolled\n * (`defaultValue`). Elke interactieve component in ProjectX UI gebruikt dit.\n */\nexport function useControllableState<T>(options: {\n  value?: T;\n  defaultValue: T;\n  onChange?: (value: T) => void;\n}): [T, (next: T | ((prev: T) => T)) => void] {\n  const { value, defaultValue, onChange } = options;\n  const isControlled = value !== undefined;\n  const [internal, setInternal] = React.useState<T>(defaultValue);\n  const current = isControlled ? (value as T) : internal;\n\n  const onChangeRef = React.useRef(onChange);\n  useIsoLayoutEffect(() => {\n    onChangeRef.current = onChange;\n  });\n\n  const setValue = React.useCallback(\n    (next: T | ((prev: T) => T)) => {\n      const resolved =\n        typeof next === \"function\" ? (next as (prev: T) => T)(currentRef.current) : next;\n      if (!isControlled) setInternal(resolved);\n      onChangeRef.current?.(resolved);\n    },\n    [isControlled]\n  );\n\n  const currentRef = React.useRef(current);\n  currentRef.current = current;\n\n  return [current, setValue];\n}\n\n/** Roept `handler` aan bij een klik buiten alle meegegeven refs. */\nexport function useOutsideClick(\n  refs: Array<React.RefObject<HTMLElement | null>>,\n  handler: (event: MouseEvent | TouchEvent) => void,\n  enabled = true\n): void {\n  const handlerRef = React.useRef(handler);\n  handlerRef.current = handler;\n\n  React.useEffect(() => {\n    if (!enabled) return;\n    const listener = (event: MouseEvent | TouchEvent) => {\n      const target = event.target as Node | null;\n      if (!target || !document.contains(target)) return;\n      for (const ref of refs) {\n        if (ref.current && ref.current.contains(target)) return;\n      }\n      handlerRef.current(event);\n    };\n    document.addEventListener(\"mousedown\", listener, true);\n    document.addEventListener(\"touchstart\", listener, true);\n    return () => {\n      document.removeEventListener(\"mousedown\", listener, true);\n      document.removeEventListener(\"touchstart\", listener, true);\n    };\n    // eslint-disable-next-line react-hooks/exhaustive-deps\n  }, [enabled, ...refs]);\n}\n\n/** Escape-toets afhandelen (capture, zodat geneste lagen eerst sluiten). */\nexport function useEscapeKey(handler: () => void, enabled = true): void {\n  const handlerRef = React.useRef(handler);\n  handlerRef.current = handler;\n\n  React.useEffect(() => {\n    if (!enabled) return;\n    const listener = (event: KeyboardEvent) => {\n      if (event.key === \"Escape\") {\n        event.stopPropagation();\n        handlerRef.current();\n      }\n    };\n    document.addEventListener(\"keydown\", listener, true);\n    return () => document.removeEventListener(\"keydown\", listener, true);\n  }, [enabled]);\n}\n\n/** Blokkeert scrollen van de pagina zolang een overlay open staat. */\nexport function useLockScroll(enabled: boolean): void {\n  React.useEffect(() => {\n    if (!enabled) return;\n    const { overflow, paddingRight } = document.body.style;\n    const gap = window.innerWidth - document.documentElement.clientWidth;\n    document.body.style.overflow = \"hidden\";\n    if (gap > 0) document.body.style.paddingRight = `${gap}px`;\n    return () => {\n      document.body.style.overflow = overflow;\n      document.body.style.paddingRight = paddingRight;\n    };\n  }, [enabled]);\n}\n\nconst FOCUSABLE = [\n  \"a[href]\",\n  \"button:not([disabled])\",\n  \"input:not([disabled]):not([type='hidden'])\",\n  \"select:not([disabled])\",\n  \"textarea:not([disabled])\",\n  \"[tabindex]:not([tabindex='-1'])\",\n].join(\",\");\n\n/** Houdt focus binnen een container (dialog, drawer) en herstelt hem daarna. */\nexport function useFocusTrap(\n  ref: React.RefObject<HTMLElement | null>,\n  enabled: boolean\n): void {\n  React.useEffect(() => {\n    if (!enabled || !ref.current) return;\n    const node = ref.current;\n    const previous = document.activeElement as HTMLElement | null;\n\n    const focusables = () => Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE));\n    const first = focusables()[0];\n    (first ?? node).focus({ preventScroll: true });\n\n    const onKeyDown = (event: KeyboardEvent) => {\n      if (event.key !== \"Tab\") return;\n      const items = focusables();\n      if (items.length === 0) {\n        event.preventDefault();\n        return;\n      }\n      const firstItem = items[0];\n      const lastItem = items[items.length - 1];\n      if (event.shiftKey && document.activeElement === firstItem) {\n        event.preventDefault();\n        lastItem.focus();\n      } else if (!event.shiftKey && document.activeElement === lastItem) {\n        event.preventDefault();\n        firstItem.focus();\n      }\n    };\n\n    node.addEventListener(\"keydown\", onKeyDown);\n    return () => {\n      node.removeEventListener(\"keydown\", onKeyDown);\n      previous?.focus?.({ preventScroll: true });\n    };\n  }, [enabled, ref]);\n}\n\n/** Pijltjes-navigatie voor menu's, listboxen en tabs. */\nexport function useRovingIndex(count: number, initial = -1) {\n  const [index, setIndex] = React.useState(initial);\n\n  const move = React.useCallback(\n    (delta: number) => {\n      setIndex((prev) => {\n        if (count === 0) return -1;\n        const next = prev + delta;\n        if (next < 0) return count - 1;\n        if (next >= count) return 0;\n        return next;\n      });\n    },\n    [count]\n  );\n\n  return { index, setIndex, move };\n}\n\n/** Kopieert tekst naar het klembord en houdt kort een \"gekopieerd\"-status bij. */\nexport function useCopyToClipboard(timeout = 1600) {\n  const [copied, setCopied] = React.useState(false);\n\n  const copy = React.useCallback(\n    async (text: string) => {\n      try {\n        await navigator.clipboard.writeText(text);\n        setCopied(true);\n        window.setTimeout(() => setCopied(false), timeout);\n        return true;\n      } catch {\n        return false;\n      }\n    },\n    [timeout]\n  );\n\n  return { copied, copy };\n}\n"
+    },
+    {
+      "path": "lib/anchor.ts",
+      "content": "\"use client\";\n/**\n * Positionering voor zwevende lagen (dropdown, popover, select, tooltip,\n * combobox). Eigen implementatie — geen Floating UI / Popper.\n *\n * Ondersteunt: side + align, offset, automatische flip bij te weinig ruimte,\n * clampen binnen de viewport, breedte gelijk aan de anchor, en herberekenen\n * bij scroll/resize.\n */\nimport * as React from \"react\";\nimport { useIsoLayoutEffect } from \"./hooks\";\n\nexport type Side = \"top\" | \"right\" | \"bottom\" | \"left\";\nexport type Align = \"start\" | \"center\" | \"end\";\n\nexport interface AnchorOptions {\n  side?: Side;\n  align?: Align;\n  /** Afstand tussen anchor en laag, in px. */\n  offset?: number;\n  /** Minimale marge tot de rand van het scherm. */\n  padding?: number;\n  /** Laag krijgt exact de breedte van de anchor (select, combobox). */\n  matchWidth?: boolean;\n  /** Laag krijgt minimaal de breedte van de anchor. */\n  minWidth?: boolean;\n}\n\nexport interface AnchorPosition {\n  style: React.CSSProperties;\n  side: Side;\n  align: Align;\n  ready: boolean;\n}\n\nexport function useAnchorPosition(\n  anchorRef: React.RefObject<HTMLElement | null>,\n  floatingRef: React.RefObject<HTMLElement | null>,\n  open: boolean,\n  options: AnchorOptions = {}\n): AnchorPosition {\n  const {\n    side = \"bottom\",\n    align = \"start\",\n    offset = 6,\n    padding = 8,\n    matchWidth = false,\n    minWidth = false,\n  } = options;\n\n  const [position, setPosition] = React.useState<AnchorPosition>({\n    style: { position: \"fixed\", top: 0, left: 0, opacity: 0, visibility: \"hidden\" },\n    side,\n    align,\n    ready: false,\n  });\n\n  const compute = React.useCallback(() => {\n    const anchor = anchorRef.current;\n    const floating = floatingRef.current;\n    if (!anchor || !floating) return;\n\n    const a = anchor.getBoundingClientRect();\n    const f = floating.getBoundingClientRect();\n    const vw = document.documentElement.clientWidth;\n    const vh = document.documentElement.clientHeight;\n\n    const space = {\n      top: a.top - padding,\n      bottom: vh - a.bottom - padding,\n      left: a.left - padding,\n      right: vw - a.right - padding,\n    };\n\n    // Flip wanneer er aan de gewenste kant te weinig ruimte is.\n    let usedSide: Side = side;\n    const needed = side === \"top\" || side === \"bottom\" ? f.height + offset : f.width + offset;\n    if (space[side] < needed) {\n      const opposite: Record<Side, Side> = { top: \"bottom\", bottom: \"top\", left: \"right\", right: \"left\" };\n      if (space[opposite[side]] > space[side]) usedSide = opposite[side];\n    }\n\n    const width = matchWidth ? a.width : minWidth ? Math.max(a.width, f.width) : f.width;\n\n    let left = 0;\n    let top = 0;\n\n    if (usedSide === \"bottom\" || usedSide === \"top\") {\n      top = usedSide === \"bottom\" ? a.bottom + offset : a.top - offset - f.height;\n      left =\n        align === \"start\" ? a.left : align === \"end\" ? a.right - width : a.left + a.width / 2 - width / 2;\n    } else {\n      left = usedSide === \"right\" ? a.right + offset : a.left - offset - width;\n      top =\n        align === \"start\" ? a.top : align === \"end\" ? a.bottom - f.height : a.top + a.height / 2 - f.height / 2;\n    }\n\n    // Binnen beeld houden.\n    left = clamp(left, padding, Math.max(padding, vw - width - padding));\n    top = clamp(top, padding, Math.max(padding, vh - f.height - padding));\n\n    // Maximale hoogte zodat lange menu's kunnen scrollen in plaats van afgesneden worden.\n    const maxHeight =\n      usedSide === \"bottom\"\n        ? Math.max(120, vh - (a.bottom + offset) - padding)\n        : usedSide === \"top\"\n          ? Math.max(120, a.top - offset - padding)\n          : Math.max(120, vh - 2 * padding);\n\n    setPosition({\n      style: {\n        position: \"fixed\",\n        visibility: \"visible\",\n        top: Math.round(top),\n        left: Math.round(left),\n        ...(matchWidth || minWidth ? { [matchWidth ? \"width\" : \"minWidth\"]: Math.round(width) } : {}),\n        maxHeight: Math.round(maxHeight),\n      },\n      side: usedSide,\n      align,\n      ready: true,\n    });\n  }, [anchorRef, floatingRef, side, align, offset, padding, matchWidth, minWidth]);\n\n  useIsoLayoutEffect(() => {\n    if (!open) {\n      setPosition((p) => ({\n        ...p,\n        ready: false,\n        style: { ...p.style, opacity: 0, visibility: \"hidden\" },\n      }));\n      return;\n    }\n\n    // De zwevende laag zit in een portal en is soms pas een frame later\n    // gemonteerd; daarom proberen we het opnieuw tot beide elementen bestaan.\n    const onChange = () => compute();\n    const observer = typeof ResizeObserver !== \"undefined\" ? new ResizeObserver(onChange) : null;\n\n    let frame = 0;\n    let attempts = 0;\n    const attach = () => {\n      if (anchorRef.current && floatingRef.current) {\n        compute();\n        observer?.observe(floatingRef.current);\n        observer?.observe(anchorRef.current);\n        return;\n      }\n      if (attempts < 20) {\n        attempts += 1;\n        frame = requestAnimationFrame(attach);\n      }\n    };\n    attach();\n\n    window.addEventListener(\"scroll\", onChange, true);\n    window.addEventListener(\"resize\", onChange);\n\n    return () => {\n      cancelAnimationFrame(frame);\n      window.removeEventListener(\"scroll\", onChange, true);\n      window.removeEventListener(\"resize\", onChange);\n      observer?.disconnect();\n    };\n  }, [open, compute, anchorRef, floatingRef]);\n\n  return position;\n}\n\nfunction clamp(value: number, min: number, max: number): number {\n  return Math.min(Math.max(value, min), max);\n}\n"
+    },
+    {
+      "path": "lib/portal.tsx",
+      "content": "\"use client\";\n/** Portal — rendert children in document.body (of een eigen container). */\nimport * as React from \"react\";\nimport { createPortal } from \"react-dom\";\nimport { useMounted } from \"./hooks\";\n\nexport function Portal({\n  children,\n  container,\n}: {\n  children: React.ReactNode;\n  container?: Element | null;\n}) {\n  const mounted = useMounted();\n  if (!mounted) return null;\n  return createPortal(children, container ?? document.body);\n}\n"
+    },
+    {
+      "path": "icons/icon.tsx",
+      "content": "import * as React from \"react\";\nimport { ICONS, type IconName } from \"./icons\";\n\nexport interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, \"name\"> {\n  name: IconName;\n  size?: number | string;\n  strokeWidth?: number;\n}\n\n/**\n * Icon — rendert één glyph uit de eigen ProjectX UI icon set.\n * Kleur volgt `currentColor`, dus elk component stuurt de kleur via CSS.\n */\nexport const Icon = React.forwardRef<SVGSVGElement, IconProps>(function Icon(\n  { name, size = 16, strokeWidth = 2, className, ...rest },\n  ref\n) {\n  const d = ICONS[name];\n  if (!d) return null;\n\n  return (\n    <svg\n      ref={ref}\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke=\"currentColor\"\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      aria-hidden=\"true\"\n      focusable=\"false\"\n      {...rest}\n    >\n      {d.split(\" M\").map((segment, index) => (\n        <path key={index} d={index === 0 ? segment : `M${segment}`} />\n      ))}\n    </svg>\n  );\n});\n\nexport { ICONS, ICON_NAMES } from \"./icons\";\nexport type { IconName } from \"./icons\";\n"
+    },
+    {
+      "path": "icons/icons.ts",
+      "content": "/**\n * ProjectX UI — eigen icon set.\n * Eén <path>-string per glyph, 24x24 grid, stroke-based (2px, ronde caps).\n * Zelfde tekenstijl als het ProjectX UI-design. Geen icon-library nodig.\n */\nexport const ICONS = {\n  /* navigatie / chevrons */\n  chevronDown: \"M6 9l6 6 6-6\",\n  chevronUp: \"M18 15l-6-6-6 6\",\n  chevronLeft: \"M15 18l-6-6 6-6\",\n  chevronRight: \"M9 18l6-6-6-6\",\n  chevronsLeft: \"M11 17l-5-5 5-5 M18 17l-5-5 5-5\",\n  chevronsRight: \"M13 17l5-5-5-5 M6 17l5-5-5-5\",\n  chevronsUpDown: \"M7 15l5 5 5-5 M7 9l5-5 5 5\",\n  arrowRight: \"M5 12h14M12 5l7 7-7 7\",\n  arrowLeft: \"M19 12H5M12 19l-7-7 7-7\",\n  arrowUp: \"M12 19V5M5 12l7-7 7 7\",\n  arrowDown: \"M12 5v14M19 12l-7 7-7-7\",\n  externalLink: \"M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6 M15 3h6v6 M10 14L21 3\",\n  more: \"M12 13a1 1 0 100-2 1 1 0 000 2 M19 13a1 1 0 100-2 1 1 0 000 2 M5 13a1 1 0 100-2 1 1 0 000 2\",\n  moreVertical: \"M12 6a1 1 0 100-2 1 1 0 000 2 M12 13a1 1 0 100-2 1 1 0 000 2 M12 20a1 1 0 100-2 1 1 0 000 2\",\n  menu: \"M3 6h18M3 12h18M3 18h18\",\n\n  /* acties */\n  check: \"M20 6L9 17l-5-5\",\n  checkCircle: \"M22 11.08V12a10 10 0 11-5.93-9.14 M22 4L12 14.01l-3-3\",\n  x: \"M18 6L6 18M6 6l12 12\",\n  xCircle: \"M12 22a10 10 0 100-20 10 10 0 000 20z M15 9l-6 6M9 9l6 6\",\n  plus: \"M12 5v14M5 12h14\",\n  minus: \"M5 12h14\",\n  search: \"M21 21l-4.35-4.35 M11 19a8 8 0 100-16 8 8 0 000 16z\",\n  filter: \"M22 3H2l8 9.46V19l4 2v-8.54z\",\n  copy: \"M9 9h11v11H9z M5 15H4V4h11v1\",\n  trash: \"M3 6h18 M8 6V4h8v2 M19 6l-1 14H6L5 6 M10 11v6 M14 11v6\",\n  edit: \"M11 4H4v16h16v-7 M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z\",\n  refresh: \"M23 4v6h-6 M1 20v-6h6 M3.5 9a9 9 0 0114.9-3.4L23 10 M1 14l4.6 4.4A9 9 0 0020.5 15\",\n  upload: \"M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M17 8l-5-5-5 5 M12 3v12\",\n  download: \"M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3\",\n  send: \"M22 2L11 13 M22 2l-7 20-4-9-9-4z\",\n  logout: \"M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4 M16 17l5-5-5-5 M21 12H9\",\n\n  /* status */\n  info: \"M12 22a10 10 0 100-20 10 10 0 000 20z M12 16v-4 M12 8h.01\",\n  alert: \"M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z M12 9v4 M12 17h.01\",\n  alertCircle: \"M12 22a10 10 0 100-20 10 10 0 000 20z M12 8v4 M12 16h.01\",\n  help: \"M12 22a10 10 0 100-20 10 10 0 000 20z M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3 M12 17h.01\",\n  loader: \"M12 2v4 M12 18v4 M4.9 4.9l2.9 2.9 M16.2 16.2l2.9 2.9 M2 12h4 M18 12h4 M4.9 19.1l2.9-2.9 M16.2 7.8l2.9-2.9\",\n  clock: \"M12 22a10 10 0 100-20 10 10 0 000 20z M12 6v6l4 2\",\n  bell: \"M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9 M13.7 21a2 2 0 01-3.4 0\",\n\n  /* objecten */\n  mic: \"M12 15a4 4 0 004-4V6a4 4 0 00-8 0v5a4 4 0 004 4z M19 11a7 7 0 01-14 0 M12 18v4 M8 22h8\",\n  camera: \"M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z M12 17a4 4 0 100-8 4 4 0 000 8\",\n  flag: \"M4 15s1-1 4-1 5 2 8 2 4-1 4-1V4s-1 1-4 1-5-2-8-2-4 1-4 1z M4 22V4\",\n  repeat: \"M17 2l4 4-4 4 M3 11V9a4 4 0 014-4h14 M7 22l-4-4 4-4 M21 13v2a4 4 0 01-4 4H3\",\n  target: \"M12 22a10 10 0 100-20 10 10 0 000 20z M12 18a6 6 0 100-12 6 6 0 000 12z M12 14a2 2 0 100-4 2 2 0 000 4\",\n  trophy: \"M6 4h12v6a6 6 0 01-12 0z M6 6H4a2 2 0 000 4h2 M18 6h2a2 2 0 010 4h-2 M9 21h6 M12 16v5\",\n  idcard: \"M3 5h18v14H3z M9 12a2 2 0 100-4 2 2 0 000 4 M6 16c.5-1.5 2-2 3-2s2.5.5 3 2 M15 9h3 M15 13h3\",\n  phone: \"M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.1 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8.1 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z\",\n  print: \"M6 9V2h12v7 M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2 M6 14h12v8H6z\",\n  flask: \"M9 2h6 M10 2v6.5L4.6 18a2 2 0 001.7 3h11.4a2 2 0 001.7-3L14 8.5V2 M7.5 14h9\",\n  scan: \"M3 7V5a2 2 0 012-2h2 M17 3h2a2 2 0 012 2v2 M21 17v2a2 2 0 01-2 2h-2 M7 21H5a2 2 0 01-2-2v-2 M3 12h18\",\n  link: \"M10 13a5 5 0 007.5.5l3-3a5 5 0 00-7-7l-1.7 1.7 M14 11a5 5 0 00-7.5-.5l-3 3a5 5 0 007 7L12.2 19\",\n  image: \"M3 3h18v18H3z M9 10a2 2 0 100-4 2 2 0 000 4 M21 15l-5-5L5 21\",\n  play: \"M6 3l14 9-14 9z\",\n  pause: \"M7 4h3v16H7z M14 4h3v16h-3z\",\n  user: \"M20 21a8 8 0 10-16 0 M12 11a4 4 0 100-8 4 4 0 000 8\",\n  users: \"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M9 11a4 4 0 100-8 4 4 0 000 8 M23 21v-2a4 4 0 00-3-3.87 M16 3.13a4 4 0 010 7.75\",\n  building: \"M3 21h18 M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16 M9 7h2 M13 7h2 M9 11h2 M13 11h2 M9 15h2 M13 15h2\",\n  settings: \"M12 15a3 3 0 100-6 3 3 0 000 6z M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z\",\n  home: \"M3 10l9-7 9 7v10a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10\",\n  dashboard: \"M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z\",\n  layers: \"M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5\",\n  box: \"M21 8l-9-5-9 5 9 5 9-5z M3 8v8l9 5 9-5V8 M12 13v8\",\n  file: \"M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z M14 2v6h6\",\n  folder: \"M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z\",\n  mail: \"M2 5h20v14H2z M2 6l10 7 10-7\",\n  lock: \"M5 11h14v10H5z M8 11V7a4 4 0 018 0v4\",\n  key: \"M21 2l-2 2 M15.5 8.5a5.5 5.5 0 10-4.6 5.4L13 12h2v-2h2l1.5-1.5z M4.5 19.5l6.4-6.4\",\n  shield: \"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\",\n  creditcard: \"M1 4h22v16H1z M1 10h22\",\n  euro: \"M18 6.5a7 7 0 100 11 M3 10h10 M3 14h9\",\n  calendar: \"M3 5h18v16H3z M3 9h18 M8 3v4 M16 3v4\",\n  chart: \"M3 3v18h18 M7 14l3-3 3 3 5-6\",\n  chartBar: \"M3 3v18h18 M8 17V9 M13 17V5 M18 17v-6\",\n  chartPie: \"M21.2 15.9A10 10 0 118.1 2.8 M22 12A10 10 0 0012 2v10z\",\n  ticket: \"M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4z M12 6v12\",\n  sparkles: \"M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z\",\n  globe: \"M12 22a10 10 0 100-20 10 10 0 000 20z M2 12h20 M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z\",\n  eye: \"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 15a3 3 0 100-6 3 3 0 000 6z\",\n  eyeOff: \"M17.9 17.9A10.1 10.1 0 0112 20C5 20 1 12 1 12a18.4 18.4 0 015.1-5.9 M9.9 4.2A10.1 10.1 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.2 3.2 M9.9 9.9a3 3 0 004.2 4.2 M1 1l22 22\",\n  sun: \"M12 17a5 5 0 100-10 5 5 0 000 10z M12 1v2 M12 21v2 M4.2 4.2l1.4 1.4 M18.4 18.4l1.4 1.4 M1 12h2 M21 12h2 M4.2 19.8l1.4-1.4 M18.4 5.6l1.4-1.4\",\n  moon: \"M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z\",\n  monitor: \"M3 4h18v12H3z M8 21h8 M12 16v5\",\n  command: \"M18 3a3 3 0 00-3 3v12a3 3 0 103-3H6a3 3 0 103 3V6a3 3 0 10-3 3h12\",\n  terminal: \"M4 17l6-6-6-6 M12 19h8\",\n  code: \"M16 18l6-6-6-6 M8 6l-6 6 6 6\",\n  grip: \"M9 5h.01 M9 12h.01 M9 19h.01 M15 5h.01 M15 12h.01 M15 19h.01\",\n  star: \"M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.3-6.2 3.3L7 14.2l-5-4.9 6.9-1z\",\n  heart: \"M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 000-7.8z\",\n} as const;\n\nexport type IconName = keyof typeof ICONS;\nexport const ICON_NAMES = Object.keys(ICONS) as IconName[];\n"
+    },
+    {
+      "path": "styles/tokens.css",
+      "content": "/* ============================================================\n   ProjectX UI — Design tokens\n   Bron: het ProjectX UI-design (Claude Design).\n   ALLE kleuren komen uit dit bestand. Componenten gebruiken\n   NOOIT een hardcoded kleur — altijd var(--...).\n   ============================================================ */\n\n:root {\n  /* ---------- Accent (teal) ---------- */\n  --accent: #0d9488;\n  --accent-hover: #0f766e;\n  --accent-active: #115e59;\n  --accent-fg: #ffffff;\n  --accent-tint: #f0fdfa;\n  --accent-tint-2: #ccfbf1;\n  --accent-border: #99f6e4;\n\n  /* ---------- Neutraal (slate) — light ---------- */\n  --bg: #f7f8fa;\n  --bg-grad: radial-gradient(120% 120% at 50% 0%, #ffffff 0%, #f4f6f8 60%, #eef1f4 100%);\n  --surface: #ffffff;\n  --surface-2: #f9fafb;\n  --surface-3: #f1f3f5;\n  --surface-hover: #f4f6f8;\n  --border: #e7e9ee;\n  --border-strong: #d6dae1;\n  --text: #0f1729;\n  --text-2: #475063;\n  --text-3: #8a93a6;\n  --text-inv: #ffffff;\n  --overlay: rgba(10, 13, 18, .45);\n\n  /* ---------- Status ---------- */\n  --green: #16a34a;\n  --green-tint: #f0fdf4;\n  --green-border: #bbf7d0;\n  --amber: #d97706;\n  --amber-tint: #fffbeb;\n  --amber-border: #fde68a;\n  --red: #dc2626;\n  --red-tint: #fef2f2;\n  --red-border: #fecaca;\n  --blue: #2563eb;\n  --blue-tint: #eff6ff;\n  --blue-border: #bfdbfe;\n  --violet: #7c3aed;\n  --violet-tint: #f5f3ff;\n  --violet-border: #ddd6fe;\n\n  /* ---------- Datavisualisatie ---------- */\n  --chart-1: var(--accent);\n  --chart-2: var(--blue);\n  --chart-3: var(--violet);\n  --chart-4: var(--amber);\n  --chart-5: var(--green);\n  --chart-6: var(--red);\n\n  /* ---------- Radius ---------- */\n  --r-xs: 6px;\n  --r-sm: 8px;\n  --r-md: 11px;\n  --r-lg: 14px;\n  --r-xl: 20px;\n  --r-2xl: 26px;\n  --r-full: 999px;\n\n  /* ---------- Shadow ---------- */\n  --sh-xs: 0 1px 2px rgba(16, 23, 41, .05);\n  --sh-sm: 0 1px 2px rgba(16, 23, 41, .06), 0 1px 1px rgba(16, 23, 41, .04);\n  --sh-md: 0 4px 12px rgba(16, 23, 41, .07), 0 1px 3px rgba(16, 23, 41, .05);\n  --sh-lg: 0 12px 32px rgba(16, 23, 41, .10), 0 4px 10px rgba(16, 23, 41, .05);\n  --sh-xl: 0 24px 60px rgba(16, 23, 41, .16), 0 8px 18px rgba(16, 23, 41, .07);\n  --ring: 0 0 0 3.5px color-mix(in srgb, var(--accent) 22%, transparent);\n  --ring-red: 0 0 0 3.5px color-mix(in srgb, var(--red) 22%, transparent);\n\n  /* ---------- Layout ---------- */\n  --sidebar-w: 256px;\n  --topbar-h: 64px;\n  --maxw: 1160px;\n\n  /* ---------- Typografie ---------- */\n  --font: \"Hanken Grotesk\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;\n  --mono: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, monospace;\n\n  --fs-xs: 11.5px;\n  --fs-sm: 12.5px;\n  --fs-base: 14px;\n  --fs-md: 15px;\n  --fs-lg: 16px;\n  --fs-xl: 20px;\n  --fs-2xl: 26px;\n  --fs-3xl: 34px;\n\n  /* ---------- Motion ---------- */\n  --ease: cubic-bezier(.4, 0, .2, 1);\n  --ease-out: cubic-bezier(.2, .9, .3, 1);\n  --ease-pop: cubic-bezier(.2, .9, .3, 1.2);\n  --dur-fast: .12s;\n  --dur: .18s;\n  --dur-slow: .28s;\n\n  /* ---------- Z-index schaal ---------- */\n  --z-sticky: 20;\n  --z-drawer: 70;\n  --z-overlay: 100;\n  --z-popover: 2000;\n  --z-toast: 2200;\n\n  /* ---------- Sidebar, donkere variant ---------- */\n  /* Volledig afgeleid van de bestaande tokens: een donkere, teal-getinte rail\n     die ook in lichtmodus werkt (zoals in het planningsdesign). */\n  --sidebar-ink: color-mix(in srgb, var(--accent-active) 20%, var(--text));\n  --sidebar-ink-2: color-mix(in srgb, var(--accent-active) 32%, var(--text));\n  --sidebar-ink-border: color-mix(in srgb, var(--text-inv) 10%, transparent);\n  --sidebar-ink-text: color-mix(in srgb, var(--text-inv) 72%, transparent);\n  --sidebar-ink-strong: var(--text-inv);\n  --sidebar-ink-dim: color-mix(in srgb, var(--text-inv) 48%, transparent);\n  --sidebar-ink-hover: color-mix(in srgb, var(--text-inv) 8%, transparent);\n  --sidebar-ink-active: color-mix(in srgb, var(--accent) 26%, transparent);\n  --sidebar-ink-accent: var(--accent-tint-2);\n\n  /* ---------- Dichtheid ----------\n     Schaalt de hoogte en binnenmarge van bedieningselementen.\n     Zet data-density=\"compact\" of \"comfy\" op <html> of op een deel van de pagina. */\n  --density: 1;\n}\n\n[data-density=\"compact\"] { --density: 0.86; }\n[data-density=\"comfy\"] { --density: 1.14; }\n\n[data-theme=\"dark\"] {\n  --accent: #2dd4bf;\n  --accent-hover: #5eead4;\n  --accent-active: #99f6e4;\n  --accent-fg: #04201d;\n  --accent-tint: #0c2925;\n  --accent-tint-2: #123e38;\n  --accent-border: #1c4f48;\n\n  --bg: #0a0c10;\n  --bg-grad: radial-gradient(120% 120% at 50% 0%, #14181f 0%, #0d1015 55%, #08090d 100%);\n  --surface: #14171d;\n  --surface-2: #181c23;\n  --surface-3: #1e232b;\n  --surface-hover: #1b2027;\n  --border: #262b34;\n  --border-strong: #333a45;\n  --text: #eef1f6;\n  --text-2: #a7b0c0;\n  --text-3: #6b7484;\n  --text-inv: #0a0c10;\n  --overlay: rgba(2, 4, 8, .62);\n\n  --green: #4ade80;\n  --green-tint: #0e2417;\n  --green-border: #1c4029;\n  --amber: #fbbf24;\n  --amber-tint: #2a2008;\n  --amber-border: #4a3a12;\n  --red: #f87171;\n  --red-tint: #2a1313;\n  --red-border: #4a2222;\n  --blue: #60a5fa;\n  --blue-tint: #0f1d33;\n  --blue-border: #1e3a5f;\n  --violet: #a78bfa;\n  --violet-tint: #1c1633;\n  --violet-border: #322a52;\n\n  --sh-xs: 0 1px 2px rgba(0, 0, 0, .4);\n  --sh-sm: 0 1px 2px rgba(0, 0, 0, .45);\n  --sh-md: 0 4px 14px rgba(0, 0, 0, .5);\n  --sh-lg: 0 14px 36px rgba(0, 0, 0, .55);\n  --sh-xl: 0 26px 64px rgba(0, 0, 0, .6);\n  --ring: 0 0 0 3.5px color-mix(in srgb, var(--accent) 28%, transparent);\n  --ring-red: 0 0 0 3.5px color-mix(in srgb, var(--red) 28%, transparent);\n\n  /* ---------- Sidebar, donkere variant ---------- */\n  --sidebar-ink: color-mix(in srgb, var(--accent-active) 14%, var(--surface));\n  --sidebar-ink-2: color-mix(in srgb, var(--accent-active) 20%, var(--surface-2));\n  --sidebar-ink-border: var(--border);\n  --sidebar-ink-text: var(--text-2);\n  --sidebar-ink-strong: var(--text);\n  --sidebar-ink-dim: var(--text-3);\n  --sidebar-ink-hover: color-mix(in srgb, var(--text) 8%, transparent);\n  --sidebar-ink-active: color-mix(in srgb, var(--accent) 18%, transparent);\n  --sidebar-ink-accent: var(--accent);\n}\n\n/* Volgt het systeem wanneer er geen expliciete keuze is gemaakt. */\n@media (prefers-color-scheme: dark) {\n  :root:not([data-theme=\"light\"]):not([data-theme=\"dark\"]) {\n    --accent: #2dd4bf;\n    --accent-hover: #5eead4;\n    --accent-active: #99f6e4;\n    --accent-fg: #04201d;\n    --accent-tint: #0c2925;\n    --accent-tint-2: #123e38;\n    --accent-border: #1c4f48;\n\n    --bg: #0a0c10;\n    --bg-grad: radial-gradient(120% 120% at 50% 0%, #14181f 0%, #0d1015 55%, #08090d 100%);\n    --surface: #14171d;\n    --surface-2: #181c23;\n    --surface-3: #1e232b;\n    --surface-hover: #1b2027;\n    --border: #262b34;\n    --border-strong: #333a45;\n    --text: #eef1f6;\n    --text-2: #a7b0c0;\n    --text-3: #6b7484;\n    --text-inv: #0a0c10;\n    --overlay: rgba(2, 4, 8, .62);\n\n    --green: #4ade80;\n    --green-tint: #0e2417;\n    --green-border: #1c4029;\n    --amber: #fbbf24;\n    --amber-tint: #2a2008;\n    --amber-border: #4a3a12;\n    --red: #f87171;\n    --red-tint: #2a1313;\n    --red-border: #4a2222;\n    --blue: #60a5fa;\n    --blue-tint: #0f1d33;\n    --blue-border: #1e3a5f;\n    --violet: #a78bfa;\n    --violet-tint: #1c1633;\n    --violet-border: #322a52;\n\n    --sh-xs: 0 1px 2px rgba(0, 0, 0, .4);\n    --sh-sm: 0 1px 2px rgba(0, 0, 0, .45);\n    --sh-md: 0 4px 14px rgba(0, 0, 0, .5);\n    --sh-lg: 0 14px 36px rgba(0, 0, 0, .55);\n    --sh-xl: 0 26px 64px rgba(0, 0, 0, .6);\n    --ring: 0 0 0 3.5px color-mix(in srgb, var(--accent) 28%, transparent);\n    --ring-red: 0 0 0 3.5px color-mix(in srgb, var(--red) 28%, transparent);\n\n    --sidebar-ink: color-mix(in srgb, var(--accent-active) 14%, var(--surface));\n    --sidebar-ink-2: color-mix(in srgb, var(--accent-active) 20%, var(--surface-2));\n    --sidebar-ink-border: var(--border);\n    --sidebar-ink-text: var(--text-2);\n    --sidebar-ink-strong: var(--text);\n    --sidebar-ink-dim: var(--text-3);\n    --sidebar-ink-hover: color-mix(in srgb, var(--text) 8%, transparent);\n    --sidebar-ink-active: color-mix(in srgb, var(--accent) 18%, transparent);\n    --sidebar-ink-accent: var(--accent);\n  }\n}\n\n/* ------------------------------------------------------------\n   Tailwind v4 draait puur als CSS-engine (reset + utilities).\n   Deze @theme-mapping maakt dezelfde tokens beschikbaar als\n   utilities (bg-accent, text-text-2, rounded-lg, ...) voor NIEUWE\n   markup. De componenten zelf gebruiken hun eigen .pxui-* klassen.\n   ------------------------------------------------------------ */\n@theme {\n  --color-accent: #0d9488;\n  --color-accent-hover: #0f766e;\n  --color-accent-active: #115e59;\n  --color-accent-fg: #ffffff;\n  --color-accent-tint: #f0fdfa;\n  --color-accent-tint-2: #ccfbf1;\n  --color-accent-border: #99f6e4;\n  --color-surface: #ffffff;\n  --color-surface-2: #f9fafb;\n  --color-surface-3: #f1f3f5;\n  --color-border: #e7e9ee;\n  --color-border-strong: #d6dae1;\n  --color-text: #0f1729;\n  --color-text-2: #475063;\n  --color-text-3: #8a93a6;\n  --color-green: #16a34a;\n  --color-amber: #d97706;\n  --color-red: #dc2626;\n  --color-blue: #2563eb;\n  --color-violet: #7c3aed;\n  --radius-xs: 6px;\n  --radius-sm: 8px;\n  --radius-md: 11px;\n  --radius-lg: 14px;\n  --radius-xl: 20px;\n  --font-sans: \"Hanken Grotesk\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;\n  --font-mono: \"JetBrains Mono\", ui-monospace, \"SF Mono\", Menlo, monospace;\n}\n"
+    },
+    {
+      "path": "styles/base.css",
+      "content": "/* ============================================================\n   ProjectX UI — Base laag\n   Typografie, body-styling, scrollbars, gedeelde animaties.\n   ============================================================ */\n\n* { box-sizing: border-box; }\nhtml, body { margin: 0; padding: 0; }\n\nbody {\n  font-family: var(--font);\n  background: var(--bg);\n  color: var(--text);\n  -webkit-font-smoothing: antialiased;\n  text-rendering: optimizeLegibility;\n  font-feature-settings: \"ss01\", \"cv01\";\n}\n\nbutton, input, select, textarea { font-family: inherit; }\n::selection { background: var(--accent-tint-2); color: var(--text); }\n\n*::-webkit-scrollbar { width: 10px; height: 10px; }\n*::-webkit-scrollbar-thumb {\n  background: var(--border-strong); border-radius: var(--r-full);\n  border: 3px solid transparent; background-clip: content-box;\n}\n*::-webkit-scrollbar-thumb:hover { background: var(--text-3); background-clip: content-box; }\n*::-webkit-scrollbar-track { background: transparent; }\n\nh1, h2, h3, h4 {\n  margin: 0; font-weight: 650; letter-spacing: -0.02em;\n  line-height: 1.12; color: var(--text);\n}\np { margin: 0; line-height: 1.6; color: var(--text-2); }\n\n/* ---------- Typografie-helpers ---------- */\n.pxui-display { font-size: var(--fs-3xl); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }\n.pxui-h1 { font-size: var(--fs-2xl); font-weight: 650; letter-spacing: -0.02em; }\n.pxui-h2 { font-size: var(--fs-xl); font-weight: 650; letter-spacing: -0.02em; }\n.pxui-h3 { font-size: var(--fs-lg); font-weight: 650; letter-spacing: -0.02em; }\n.pxui-eyebrow {\n  font-size: 12px; font-weight: 650; letter-spacing: .09em;\n  text-transform: uppercase; color: var(--text-3);\n}\n.pxui-muted { color: var(--text-2); }\n.pxui-subtle { color: var(--text-3); }\n.pxui-mono { font-family: var(--mono); font-feature-settings: normal; }\n.pxui-lead { font-size: var(--fs-md); color: var(--text-2); line-height: 1.6; }\n\n/* ---------- Gedeelde animaties ---------- */\n@keyframes pxui-fade-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }\n@keyframes pxui-pop-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }\n@keyframes pxui-overlay-in { from { opacity: 0; } to { opacity: 1; } }\n@keyframes pxui-spin { to { transform: rotate(360deg); } }\n@keyframes pxui-shimmer { to { background-position: -200% 0; } }\n@keyframes pxui-menu-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }\n\n.pxui-fade-in { animation: pxui-fade-in .35s var(--ease) both; }\n.pxui-pop-in { animation: pxui-pop-in var(--dur-slow) var(--ease-pop) both; }\n\n/* ---------- Focus ---------- */\n.pxui-focus-ring:focus-visible { outline: none; box-shadow: var(--ring); }\n\n/* ---------- Screenreader-only ---------- */\n.pxui-sr-only {\n  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;\n  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;\n}\n\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: .001ms !important;\n    animation-iteration-count: 1 !important;\n    transition-duration: .001ms !important;\n  }\n}\n"
+    }
+  ],
+  "components": [
+    {
+      "name": "button",
+      "title": "Button",
+      "description": "Knop met zes varianten, drie maten, iconen en laadstatus.",
+      "category": "Basis",
+      "dependencies": [
+        "spinner"
+      ],
+      "files": [
+        "components/button.tsx",
+        "components/button.css"
+      ]
+    },
+    {
+      "name": "badge",
+      "title": "Badge",
+      "description": "Compact label voor status, categorie of telling.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/badge.tsx",
+        "components/badge.css"
+      ]
+    },
+    {
+      "name": "avatar",
+      "title": "Avatar",
+      "description": "Foto of initialen, met statusstip en groepsweergave.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/avatar.tsx",
+        "components/avatar.css"
+      ]
+    },
+    {
+      "name": "card",
+      "title": "Card",
+      "description": "Basiscontainer met kop, inhoud en voettekst.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/card.tsx",
+        "components/card.css"
+      ]
+    },
+    {
+      "name": "separator",
+      "title": "Separator",
+      "description": "Scheidingslijn, horizontaal of verticaal, met optioneel label.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/separator.tsx",
+        "components/separator.css"
+      ]
+    },
+    {
+      "name": "kbd",
+      "title": "Kbd",
+      "description": "Toetsaanslag of sneltoets tonen.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/kbd.tsx",
+        "components/kbd.css"
+      ]
+    },
+    {
+      "name": "skeleton",
+      "title": "Skeleton",
+      "description": "Laadplaceholder met shimmer.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/skeleton.tsx",
+        "components/skeleton.css"
+      ]
+    },
+    {
+      "name": "spinner",
+      "title": "Spinner",
+      "description": "Ronddraaiende laadindicator die de tekstkleur erft.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/spinner.tsx",
+        "components/spinner.css"
+      ]
+    },
+    {
+      "name": "icon",
+      "title": "Icon",
+      "description": "Eigen icon set: één stroke-based glyph per naam.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "icons/icon.tsx",
+        "icons/icons.ts"
+      ]
+    },
+    {
+      "name": "toolbar",
+      "title": "Toolbar",
+      "description": "Knoppenrij met groepen, scheidingslijnen en aan/uit-knoppen.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/toolbar.tsx",
+        "components/toolbar.css"
+      ]
+    },
+    {
+      "name": "chip",
+      "title": "Chip",
+      "description": "Klikbaar filterlabel, of een verwijderbare tag.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/chip.tsx",
+        "components/chip.css"
+      ]
+    },
+    {
+      "name": "data-pill",
+      "title": "DataPill",
+      "description": "Compacte meetwaarde: label, waarde en eenheid op één regel.",
+      "category": "Data",
+      "dependencies": [],
+      "files": [
+        "components/data-pill.tsx",
+        "components/data-pill.css"
+      ]
+    },
+    {
+      "name": "pulse-dot",
+      "title": "PulseDot",
+      "description": "Statusbolletje met kloppende halo, voor live of bezet.",
+      "category": "Feedback",
+      "dependencies": [],
+      "files": [
+        "components/pulse-dot.tsx",
+        "components/pulse-dot.css"
+      ]
+    },
+    {
+      "name": "copy-button",
+      "title": "CopyButton",
+      "description": "Kopieert een waarde en bevestigt dat kort met een vinkje.",
+      "category": "Basis",
+      "dependencies": [],
+      "files": [
+        "components/copy-button.tsx",
+        "components/copy-button.css"
+      ]
+    },
+    {
+      "name": "input",
+      "title": "Input",
+      "description": "Tekstveld met iconen, addon, maten en foutstatus.",
+      "category": "Formulieren",
+      "dependencies": [
+        "field"
+      ],
+      "files": [
+        "components/input.tsx",
+        "components/input.css"
+      ]
+    },
+    {
+      "name": "textarea",
+      "title": "Textarea",
+      "description": "Meerregelig tekstveld, optioneel meegroeiend.",
+      "category": "Formulieren",
+      "dependencies": [
+        "field"
+      ],
+      "files": [
+        "components/textarea.tsx",
+        "components/textarea.css"
+      ]
+    },
+    {
+      "name": "field",
+      "title": "Field",
+      "description": "Koppelt label, hint en foutmelding aan één invoerveld.",
+      "category": "Formulieren",
+      "dependencies": [
+        "label"
+      ],
+      "files": [
+        "components/field.tsx",
+        "components/field.css"
+      ]
+    },
+    {
+      "name": "label",
+      "title": "Label",
+      "description": "Bijschrift voor een formulierveld, met verplicht-markering.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/label.tsx",
+        "components/label.css"
+      ]
+    },
+    {
+      "name": "checkbox",
+      "title": "Checkbox",
+      "description": "Aanvinkvakje met derde staat en beschrijving.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/checkbox.tsx",
+        "components/checkbox.css"
+      ]
+    },
+    {
+      "name": "radio-group",
+      "title": "RadioGroup",
+      "description": "Groep keuzerondjes, ook als klikbare kaarten.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/radio-group.tsx",
+        "components/radio-group.css"
+      ]
+    },
+    {
+      "name": "switch",
+      "title": "Switch",
+      "description": "Aan/uit-schakelaar met label en beschrijving.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/switch.tsx",
+        "components/switch.css"
+      ]
+    },
+    {
+      "name": "select",
+      "title": "Select",
+      "description": "Eigen keuzelijst — geen native select, volledig stijlbaar.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/select.tsx",
+        "components/select.css"
+      ]
+    },
+    {
+      "name": "combobox",
+      "title": "Combobox",
+      "description": "Zoekbare keuzelijst met toetsenbordnavigatie.",
+      "category": "Formulieren",
+      "dependencies": [
+        "select"
+      ],
+      "files": [
+        "components/combobox.tsx",
+        "components/combobox.css"
+      ]
+    },
+    {
+      "name": "slider",
+      "title": "Slider",
+      "description": "Schuifregelaar met waardeweergave en tonen.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/slider.tsx",
+        "components/slider.css"
+      ]
+    },
+    {
+      "name": "otp-input",
+      "title": "OtpInput",
+      "description": "Invoer van een verificatiecode, één teken per vakje.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/otp-input.tsx",
+        "components/otp-input.css"
+      ]
+    },
+    {
+      "name": "file-drop",
+      "title": "FileDrop",
+      "description": "Sleepzone voor bestanden, met bestandslijst.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/file-drop.tsx",
+        "components/file-drop.css"
+      ]
+    },
+    {
+      "name": "dialog",
+      "title": "Dialog",
+      "description": "Modaal venster met focus-trap, Escape en overlay.",
+      "category": "Overlays",
+      "dependencies": [
+        "button"
+      ],
+      "files": [
+        "components/dialog.tsx",
+        "components/dialog.css"
+      ]
+    },
+    {
+      "name": "drawer",
+      "title": "Drawer",
+      "description": "Paneel dat vanaf een zijkant inschuift.",
+      "category": "Overlays",
+      "dependencies": [
+        "dialog",
+        "button"
+      ],
+      "files": [
+        "components/drawer.tsx",
+        "components/drawer.css"
+      ]
+    },
+    {
+      "name": "popover",
+      "title": "Popover",
+      "description": "Zwevend paneel dat automatisch flipt bij weinig ruimte.",
+      "category": "Overlays",
+      "dependencies": [],
+      "files": [
+        "components/popover.tsx",
+        "components/popover.css"
+      ]
+    },
+    {
+      "name": "dropdown-menu",
+      "title": "DropdownMenu",
+      "description": "Actiemenu met pijltjesnavigatie, sneltoetsen en secties.",
+      "category": "Overlays",
+      "dependencies": [
+        "button"
+      ],
+      "files": [
+        "components/dropdown-menu.tsx",
+        "components/dropdown-menu.css"
+      ]
+    },
+    {
+      "name": "tooltip",
+      "title": "Tooltip",
+      "description": "Korte uitleg bij hover én toetsenbordfocus.",
+      "category": "Overlays",
+      "dependencies": [],
+      "files": [
+        "components/tooltip.tsx",
+        "components/tooltip.css"
+      ]
+    },
+    {
+      "name": "command",
+      "title": "Command",
+      "description": "Zoek- en actiepalet met ⌘K-sneltoets.",
+      "category": "Overlays",
+      "dependencies": [
+        "dialog"
+      ],
+      "files": [
+        "components/command.tsx",
+        "components/command.css"
+      ]
+    },
+    {
+      "name": "toast",
+      "title": "Toast",
+      "description": "Tijdelijke melding met toon, actie en automatische sluiting.",
+      "category": "Overlays",
+      "dependencies": [],
+      "files": [
+        "components/toast.tsx",
+        "components/toast.css"
+      ]
+    },
+    {
+      "name": "modal-manager",
+      "title": "ModalProvider",
+      "description": "Dialogs imperatief openen vanuit één register, met useModal().",
+      "category": "Overlays",
+      "dependencies": [
+        "dialog"
+      ],
+      "files": [
+        "components/modal-manager.tsx"
+      ]
+    },
+    {
+      "name": "tabs",
+      "title": "Tabs",
+      "description": "Tabbladen in drie stijlen, met pijltjesnavigatie.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/tabs.tsx",
+        "components/tabs.css"
+      ]
+    },
+    {
+      "name": "accordion",
+      "title": "Accordion",
+      "description": "In- en uitklapbare secties, enkel of meervoudig.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/accordion.tsx",
+        "components/accordion.css"
+      ]
+    },
+    {
+      "name": "breadcrumb",
+      "title": "Breadcrumb",
+      "description": "Kruimelpad met scheidingstekens.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/breadcrumb.tsx",
+        "components/breadcrumb.css"
+      ]
+    },
+    {
+      "name": "pagination",
+      "title": "Pagination",
+      "description": "Paginanavigatie met ellipsis en samenvatting.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/pagination.tsx",
+        "components/pagination.css"
+      ]
+    },
+    {
+      "name": "segmented",
+      "title": "Segmented",
+      "description": "Compacte keuzeschakelaar voor weergaven en filters.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/segmented.tsx",
+        "components/segmented.css"
+      ]
+    },
+    {
+      "name": "stepper",
+      "title": "Stepper",
+      "description": "Voortgang door een meerstapsflow.",
+      "category": "Navigatie",
+      "dependencies": [],
+      "files": [
+        "components/stepper.tsx",
+        "components/stepper.css"
+      ]
+    },
+    {
+      "name": "sidebar",
+      "title": "Sidebar",
+      "description": "Navigatiekolom met secties, badges en inklapstand.",
+      "category": "Navigatie",
+      "dependencies": [
+        "app-shell"
+      ],
+      "files": [
+        "components/sidebar.tsx",
+        "components/sidebar.css"
+      ]
+    },
+    {
+      "name": "calendar",
+      "title": "Calendar",
+      "description": "Maandkalender met enkelvoudige, bereik- en meervoudige selectie.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/calendar.tsx",
+        "components/calendar.css",
+        "lib/date.ts"
+      ]
+    },
+    {
+      "name": "date-picker",
+      "title": "DatePicker",
+      "description": "Datum of periode kiezen in een popover, met snelkeuzes.",
+      "category": "Datum & planning",
+      "dependencies": [
+        "calendar",
+        "popover",
+        "field"
+      ],
+      "files": [
+        "components/date-picker.tsx",
+        "components/date-picker.css"
+      ]
+    },
+    {
+      "name": "time-field",
+      "title": "TimeField",
+      "description": "Tijd invoeren met slimme parsing, stappen en tijdslotsuggesties.",
+      "category": "Datum & planning",
+      "dependencies": [
+        "field"
+      ],
+      "files": [
+        "components/time-field.tsx",
+        "components/time-field.css",
+        "lib/date.ts"
+      ]
+    },
+    {
+      "name": "week-schedule",
+      "title": "WeekSchedule",
+      "description": "Weekplanning met uurraster, overlappende blokken en drag & drop.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/week-schedule.tsx",
+        "components/week-schedule.css",
+        "lib/date.ts"
+      ]
+    },
+    {
+      "name": "resource-columns",
+      "title": "ResourceColumns",
+      "description": "Dagagenda met een kolom per arts, kamer of medewerker.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/resource-columns.tsx",
+        "components/resource-columns.css",
+        "lib/schedule.ts"
+      ]
+    },
+    {
+      "name": "swimlanes",
+      "title": "Swimlanes",
+      "description": "De agenda op zijn kant: een baan per resource, tijd van links naar rechts.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/swimlanes.tsx",
+        "components/swimlanes.css",
+        "lib/schedule.ts"
+      ]
+    },
+    {
+      "name": "time-slot-list",
+      "title": "TimeSlotList",
+      "description": "De dag als verticale tijdlijn, met kaartjes per tijdstip.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/time-slot-list.tsx",
+        "components/time-slot-list.css",
+        "lib/schedule.ts"
+      ]
+    },
+    {
+      "name": "period-nav",
+      "title": "PeriodNav",
+      "description": "Vorige en volgende door weken, maanden of elke andere periode.",
+      "category": "Datum & planning",
+      "dependencies": [],
+      "files": [
+        "components/period-nav.tsx",
+        "components/period-nav.css"
+      ]
+    },
+    {
+      "name": "table",
+      "title": "Table",
+      "description": "Datatabel met sorteerbare koppen, dichte modus en toolbar.",
+      "category": "Data",
+      "dependencies": [],
+      "files": [
+        "components/table.tsx",
+        "components/table.css"
+      ]
+    },
+    {
+      "name": "list-row",
+      "title": "ListRow",
+      "description": "Rij in een lijst: afspraak, document, gebruiker of melding.",
+      "category": "Data",
+      "dependencies": [],
+      "files": [
+        "components/list-row.tsx",
+        "components/list-row.css"
+      ]
+    },
+    {
+      "name": "stat",
+      "title": "Stat",
+      "description": "KPI-tegel met waarde, icoon, trend en grafiekje.",
+      "category": "Data",
+      "dependencies": [
+        "chart"
+      ],
+      "files": [
+        "components/stat.tsx",
+        "components/stat.css"
+      ]
+    },
+    {
+      "name": "chart",
+      "title": "Charts",
+      "description": "Sparkline, staaf-, lijn- en donutgrafiek — eigen SVG, geen bibliotheek.",
+      "category": "Data",
+      "dependencies": [],
+      "files": [
+        "components/chart.tsx",
+        "components/chart.css"
+      ]
+    },
+    {
+      "name": "progress",
+      "title": "Progress",
+      "description": "Voortgangsbalk en ronde variant, ook onbepaald.",
+      "category": "Data",
+      "dependencies": [],
+      "files": [
+        "components/progress.tsx",
+        "components/progress.css"
+      ]
+    },
+    {
+      "name": "alert",
+      "title": "Alert",
+      "description": "Inline melding met toon, titel en actie.",
+      "category": "Feedback",
+      "dependencies": [],
+      "files": [
+        "components/alert.tsx",
+        "components/alert.css"
+      ]
+    },
+    {
+      "name": "empty-state",
+      "title": "EmptyState",
+      "description": "Lege lijst, geen resultaten of nog niets ingesteld.",
+      "category": "Feedback",
+      "dependencies": [],
+      "files": [
+        "components/empty-state.tsx",
+        "components/empty-state.css"
+      ]
+    },
+    {
+      "name": "section-header",
+      "title": "SectionHeader",
+      "description": "Compacte kop boven een blok, met gekleurd staafje en acties.",
+      "category": "Layout",
+      "dependencies": [],
+      "files": [
+        "components/section-header.tsx",
+        "components/section-header.css"
+      ]
+    },
+    {
+      "name": "workspace",
+      "title": "Workspace",
+      "description": "Werkblad met smalle rails links en rechts naast de inhoud.",
+      "category": "Layout",
+      "dependencies": [
+        "section-header"
+      ],
+      "files": [
+        "components/workspace.tsx",
+        "components/workspace.css"
+      ]
+    },
+    {
+      "name": "entity-header",
+      "title": "EntityHeader",
+      "description": "Kop van een dossier: media, naam, kerngegevens, labels en acties.",
+      "category": "Layout",
+      "dependencies": [],
+      "files": [
+        "components/entity-header.tsx",
+        "components/entity-header.css"
+      ]
+    },
+    {
+      "name": "app-shell",
+      "title": "AppShell",
+      "description": "Layout met vaste zijbalk, bovenbalk en inhoudskolom.",
+      "category": "Layout",
+      "dependencies": [],
+      "files": [
+        "components/app-shell.tsx",
+        "components/app-shell.css"
+      ]
+    },
+    {
+      "name": "theme",
+      "title": "Theme",
+      "description": "Licht/donker met ThemeProvider, useTheme en ThemeToggle.",
+      "category": "Layout",
+      "dependencies": [],
+      "files": [
+        "components/theme.tsx",
+        "components/theme.css"
+      ]
+    },
+    {
+      "name": "task-item",
+      "title": "TaskItem",
+      "description": "Eén taak in een lijst: afvinken, prioriteit, labels en deeltaken.",
+      "category": "Data",
+      "dependencies": [
+        "confetti"
+      ],
+      "files": [
+        "components/task-item.tsx",
+        "components/task-item.css"
+      ]
+    },
+    {
+      "name": "composer",
+      "title": "Composer",
+      "description": "Invoerbalk om snel iets toe te voegen, met microfoon en snelkeuzes.",
+      "category": "Formulieren",
+      "dependencies": [
+        "voice-button"
+      ],
+      "files": [
+        "components/composer.tsx",
+        "components/composer.css"
+      ]
+    },
+    {
+      "name": "voice-button",
+      "title": "VoiceButton",
+      "description": "Microfoonknop op de spraakherkenning van de browser.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/voice-button.tsx",
+        "components/voice-button.css",
+        "lib/use-voice.ts"
+      ]
+    },
+    {
+      "name": "confetti",
+      "title": "ConfettiBurst",
+      "description": "Kleine explosie van snippers bij iets dat af is.",
+      "category": "Feedback",
+      "dependencies": [],
+      "files": [
+        "components/confetti.tsx",
+        "components/confetti.css"
+      ]
+    },
+    {
+      "name": "auth-layout",
+      "title": "AuthLayout",
+      "description": "Aanmeldscherm: merkpaneel, kaart, scheiding en SSO-knoppen.",
+      "category": "Layout",
+      "dependencies": [],
+      "files": [
+        "components/auth-layout.tsx",
+        "components/auth-layout.css"
+      ]
+    },
+    {
+      "name": "avatar-upload",
+      "title": "AvatarUpload",
+      "description": "Profielfoto kiezen, bijsnijden en verkleinen in de browser.",
+      "category": "Formulieren",
+      "dependencies": [
+        "avatar"
+      ],
+      "files": [
+        "components/avatar-upload.tsx",
+        "components/avatar-upload.css",
+        "lib/image.ts"
+      ]
+    },
+    {
+      "name": "swatch-picker",
+      "title": "SwatchPicker",
+      "description": "Kleur kiezen uit een rij stalen, met optionele eigen kleur.",
+      "category": "Formulieren",
+      "dependencies": [],
+      "files": [
+        "components/swatch-picker.tsx",
+        "components/swatch-picker.css"
+      ]
+    }
+  ]
+}

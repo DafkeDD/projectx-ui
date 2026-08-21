@@ -1,0 +1,17 @@
+{
+  "name": "badge",
+  "title": "Badge",
+  "description": "Compact label voor status, categorie of telling.",
+  "category": "Basis",
+  "dependencies": [],
+  "files": [
+    {
+      "path": "components/badge.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { variants } from \"../lib/variants\";\n\nconst badge = variants({\n  base: \"pxui-badge\",\n  variants: {\n    tone: {\n      neutral: \"pxui-badge-neutral\",\n      accent: \"pxui-badge-accent\",\n      green: \"pxui-badge-green\",\n      amber: \"pxui-badge-amber\",\n      red: \"pxui-badge-red\",\n      blue: \"pxui-badge-blue\",\n      violet: \"pxui-badge-violet\",\n    },\n    size: { sm: \"pxui-badge-sm\", md: \"\" },\n  },\n  defaultVariants: { tone: \"neutral\", size: \"md\" },\n});\n\nexport type BadgeTone = \"neutral\" | \"accent\" | \"green\" | \"amber\" | \"red\" | \"blue\" | \"violet\";\n\nexport interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {\n  tone?: BadgeTone;\n  size?: \"sm\" | \"md\";\n  /** Statusbolletje links van het label. */\n  dot?: boolean;\n  icon?: React.ReactNode;\n}\n\n/** Badge — compact label voor status, categorie of telling. */\nexport const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(function Badge(\n  { tone, size, dot, icon, className, children, ...rest },\n  ref\n) {\n  return (\n    <span ref={ref} className={badge({ tone, size, className })} {...rest}>\n      {dot && <span className=\"pxui-badge-dot\" aria-hidden=\"true\" />}\n      {icon}\n      {children}\n    </span>\n  );\n});\n"
+    },
+    {
+      "path": "components/badge.css",
+      "content": "/* ============================ Badge ============================ */\n.pxui-badge {\n  display: inline-flex; align-items: center; gap: 5px;\n  height: 22px; padding: 0 9px; border-radius: var(--r-full);\n  font-size: 12px; font-weight: 600; letter-spacing: -0.005em;\n  border: 1px solid transparent; white-space: nowrap;\n}\n.pxui-badge svg { width: 12px; height: 12px; flex: none; }\n.pxui-badge-sm { height: 19px; padding: 0 7px; font-size: 11px; }\n.pxui-badge-dot { width: 7px; height: 7px; border-radius: var(--r-full); background: currentColor; flex: none; }\n\n.pxui-badge-neutral { background: var(--surface-3); color: var(--text-2); border-color: var(--border); }\n.pxui-badge-accent { background: var(--accent-tint); color: var(--accent-active); border-color: var(--accent-border); }\n.pxui-badge-green { background: var(--green-tint); color: var(--green); border-color: var(--green-border); }\n.pxui-badge-amber { background: var(--amber-tint); color: var(--amber); border-color: var(--amber-border); }\n.pxui-badge-red { background: var(--red-tint); color: var(--red); border-color: var(--red-border); }\n.pxui-badge-blue { background: var(--blue-tint); color: var(--blue); border-color: var(--blue-border); }\n.pxui-badge-violet { background: var(--violet-tint); color: var(--violet); border-color: var(--violet-border); }\n"
+    }
+  ]
+}

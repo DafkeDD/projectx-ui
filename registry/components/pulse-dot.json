@@ -1,0 +1,17 @@
+{
+  "name": "pulse-dot",
+  "title": "PulseDot",
+  "description": "Statusbolletje met kloppende halo, voor live of bezet.",
+  "category": "Feedback",
+  "dependencies": [],
+  "files": [
+    {
+      "path": "components/pulse-dot.tsx",
+      "content": "\"use client\";\nimport * as React from \"react\";\nimport { cn } from \"../lib/cn\";\n\nexport interface PulseDotProps extends React.HTMLAttributes<HTMLSpanElement> {\n  tone?: \"green\" | \"amber\" | \"red\" | \"accent\" | \"blue\" | \"neutral\";\n  size?: number;\n  /** Zet de kloppende animatie uit; de halo blijft. */\n  still?: boolean;\n  label?: string;\n}\n\n/** PulseDot — statusbolletje met halo, voor \"live\", \"bezet\" of \"online\". */\nexport const PulseDot = React.forwardRef<HTMLSpanElement, PulseDotProps>(function PulseDot(\n  { tone = \"green\", size = 9, still, label, className, style, ...rest },\n  ref\n) {\n  return (\n    <span\n      ref={ref}\n      role={label ? \"status\" : undefined}\n      aria-label={label}\n      className={cn(\"pxui-pulse\", `pxui-pulse-${tone}`, still && \"pxui-pulse-still\", className)}\n      style={{ width: size, height: size, ...style }}\n      {...rest}\n    />\n  );\n});\n"
+    },
+    {
+      "path": "components/pulse-dot.css",
+      "content": "/* ============================ PulseDot ============================ */\n.pxui-pulse {\n  --pxui-pulse-color: var(--green);\n  position: relative; display: inline-block; flex: none;\n  border-radius: var(--r-full); background: var(--pxui-pulse-color);\n  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pxui-pulse-color) 18%, transparent);\n}\n.pxui-pulse::after {\n  content: \"\"; position: absolute; inset: 0;\n  border-radius: inherit; background: var(--pxui-pulse-color);\n  animation: pxui-pulse 1.8s var(--ease-out) infinite;\n}\n.pxui-pulse-still::after { animation: none; display: none; }\n\n@keyframes pxui-pulse {\n  0% { opacity: .55; transform: scale(1); }\n  70% { opacity: 0; transform: scale(2.4); }\n  100% { opacity: 0; transform: scale(2.4); }\n}\n\n.pxui-pulse-green { --pxui-pulse-color: var(--green); }\n.pxui-pulse-amber { --pxui-pulse-color: var(--amber); }\n.pxui-pulse-red { --pxui-pulse-color: var(--red); }\n.pxui-pulse-accent { --pxui-pulse-color: var(--accent); }\n.pxui-pulse-blue { --pxui-pulse-color: var(--blue); }\n.pxui-pulse-neutral { --pxui-pulse-color: var(--text-3); }\n"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+/* ============================ RowList / ListRow ============================ */
+.pxui-rowlist { display: flex; flex-direction: column; min-width: 0; }
+.pxui-rowlist-bordered {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--sh-sm); overflow: hidden;
+}
+.pxui-rowlist:not(.pxui-rowlist-separated) > .pxui-row + .pxui-row {
+  border-top: 1px solid var(--border);
+}
+.pxui-rowlist-separated { gap: 10px; }
+.pxui-rowlist-separated > .pxui-row {
+  border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+}
+
+/* ---------- Rij ---------- */
+.pxui-row {
+  --pxui-row-accent: transparent;
+  position: relative;
+  display: flex; align-items: center; gap: 13px;
+  padding: calc(13px * var(--density)) 16px; min-width: 0;
+  color: var(--text); text-decoration: none;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.pxui-rowlist-dense .pxui-row { padding: 9px 12px; gap: 10px; }
+
+.pxui-row-clickable { cursor: pointer; }
+.pxui-row-clickable:hover { background: var(--surface-hover); }
+.pxui-row-clickable:focus-visible { outline: none; box-shadow: inset var(--ring); }
+.pxui-row[data-selected] { background: var(--accent-tint); }
+.pxui-rowlist-separated > .pxui-row[data-selected] { border-color: var(--accent); }
+.pxui-row[data-disabled] { opacity: .55; pointer-events: none; }
+
+.pxui-row-accent {
+  position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--pxui-row-accent);
+}
+
+.pxui-row-lead {
+  flex: none; min-width: 54px;
+  font-size: 13px; font-weight: 650; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.pxui-row-leading { flex: none; display: flex; align-items: center; }
+
+.pxui-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pxui-row-title {
+  font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.pxui-row-subtitle {
+  font-size: 12.5px; color: var(--text-3); line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+.pxui-row-trailing {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-2);
+}
+.pxui-row-actions { flex: none; display: flex; align-items: center; gap: 7px; }
+
+/* ---------- Icoontegel ---------- */
+.pxui-row-icon {
+  display: grid; place-items: center; flex: none;
+  border-radius: var(--r-md);
+  background: var(--surface-3); color: var(--text-3);
+}
+.pxui-row-icon svg { width: 45%; height: 45%; }
+.pxui-row-icon-accent { background: var(--accent-tint); color: var(--accent); }
+.pxui-row-icon-green { background: var(--green-tint); color: var(--green); }
+.pxui-row-icon-amber { background: var(--amber-tint); color: var(--amber); }
+.pxui-row-icon-red { background: var(--red-tint); color: var(--red); }
+.pxui-row-icon-blue { background: var(--blue-tint); color: var(--blue); }
+.pxui-row-icon-violet { background: var(--violet-tint); color: var(--violet); }
+
+@media (max-width: 640px) {
+  .pxui-row { flex-wrap: wrap; }
+  .pxui-row-actions { margin-left: auto; }
+}

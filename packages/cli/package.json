@@ -1,0 +1,10 @@
+{
+  "name": "projectx-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CLI die ProjectX UI-componenten in je project kopieert. Nul dependencies.",
+  "type": "module",
+  "bin": { "projectx-ui": "./bin/projectx-ui.mjs" },
+  "files": ["bin", "registry"],
+  "engines": { "node": ">=20" }
+}

@@ -1,0 +1,61 @@
+/* ============================ Toast ============================ */
+.pxui-toaster {
+  position: fixed; z-index: var(--z-toast);
+  display: flex; flex-direction: column; gap: 10px;
+  pointer-events: none; max-width: min(380px, calc(100vw - 24px));
+}
+.pxui-toaster-bottom-right { bottom: 24px; right: 24px; }
+.pxui-toaster-bottom-left { bottom: 24px; left: 24px; }
+.pxui-toaster-top-right { top: 24px; right: 24px; flex-direction: column-reverse; }
+.pxui-toaster-top-left { top: 24px; left: 24px; flex-direction: column-reverse; }
+.pxui-toaster-bottom-center { bottom: 24px; left: 50%; transform: translateX(-50%); }
+.pxui-toaster-top-center { top: 24px; left: 50%; transform: translateX(-50%); flex-direction: column-reverse; }
+
+.pxui-toast {
+  --pxui-toast-color: var(--text-3);
+  pointer-events: auto; position: relative;
+  display: flex; align-items: flex-start; gap: 11px;
+  min-width: 280px; padding: 13px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); box-shadow: var(--sh-lg);
+  animation: pxui-toast-in var(--dur-slow) var(--ease-pop) both;
+}
+@keyframes pxui-toast-in {
+  from { opacity: 0; transform: translateY(14px) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+
+.pxui-toast-accent { --pxui-toast-color: var(--accent); }
+.pxui-toast-green { --pxui-toast-color: var(--green); }
+.pxui-toast-amber { --pxui-toast-color: var(--amber); }
+.pxui-toast-red { --pxui-toast-color: var(--red); }
+.pxui-toast-blue { --pxui-toast-color: var(--blue); }
+
+.pxui-toast-icon {
+  display: grid; place-items: center; flex: none;
+  width: 26px; height: 26px; border-radius: 7px;
+  color: var(--pxui-toast-color);
+  background: color-mix(in srgb, var(--pxui-toast-color) 14%, transparent);
+}
+.pxui-toast-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+.pxui-toast-title { font-size: 13.5px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.pxui-toast-description { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.45; }
+.pxui-toast-action {
+  flex: none; align-self: center; border: none; background: transparent;
+  color: var(--accent); font: inherit; font-size: 13px; font-weight: 650;
+  cursor: pointer; padding: 4px 6px; border-radius: var(--r-xs);
+}
+.pxui-toast-action:hover { background: var(--accent-tint); }
+.pxui-toast-close {
+  flex: none; display: grid; place-items: center; width: 22px; height: 22px;
+  border: none; background: transparent; color: var(--text-3);
+  border-radius: var(--r-xs); cursor: pointer;
+}
+.pxui-toast-close:hover { background: var(--surface-3); color: var(--text); }
+
+@media (max-width: 560px) {
+  .pxui-toaster { left: 12px; right: 12px; max-width: none; transform: none; }
+  .pxui-toaster-bottom-right, .pxui-toaster-bottom-left, .pxui-toaster-bottom-center { bottom: 12px; }
+  .pxui-toaster-top-right, .pxui-toaster-top-left, .pxui-toaster-top-center { top: 12px; }
+  .pxui-toast { min-width: 0; }
+}
